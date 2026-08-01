@@ -43,9 +43,27 @@ additional_redirect_urls = [
   # Acesso pela rede local (celular apontando para o PC). `localhost` no
   # celular resolve para o próprio celular, então o teste em aparelho exige o
   # IP da máquina — e o GoTrue recusa qualquer redirect fora desta lista.
+  #
+  # Curinga `/**` e não caminho exato: a entrada exata
+  # `http://192.168.0.15:3002/auth/callback` foi REJEITADA na prática. Medido
+  # comparando três redirects contra /auth/v1/verify: o de localhost (exato,
+  # antigo) era honrado, o do IP caía no site_url — mesmo desfecho de um
+  # domínio de invasor. O curinga é a forma que a documentação usa.
+  #
   # Se o IP do Wi-Fi mudar, atualize aqui e rode `supabase config push`.
-  "http://192.168.0.15:3002/auth/callback",
+  "http://192.168.0.15:3002/**",
   "sentinela://callback",
+  # O app envia `sentinela://callback?next=/`. O GoTrue casa a lista por string
+  # EXATA — com a query a mais, ele recusa e cai no site_url, que é
+  # http://localhost:3002. No celular isso vira "conexão recusada", e o usuário
+  # não tem como adivinhar que o problema foi um parâmetro de query.
+  #
+  # Medido contra /auth/v1/verify: sem a query o redirect é honrado; com a
+  # query, mesmo desfecho de um domínio não autorizado.
+  #
+  # As duas formas ficam listadas de propósito: esta cobre os aparelhos que já
+  # têm o APK antigo instalado, a de cima cobre os builds seguintes.
+  "sentinela://callback?next=/",
   "exp://127.0.0.1:8081/--/callback"
 ]
 jwt_expiry = 3600

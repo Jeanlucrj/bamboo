@@ -16,6 +16,17 @@ Notifications.setNotificationHandler({
  * notificação não é opcional neste produto.
  */
 export async function registerForPush(): Promise<string | null> {
+  try {
+    return await registarInterno();
+  } catch (e) {
+    // Nunca propaga. Push é importante mas não é pré-requisito para o app
+    // funcionar — e uma exceção aqui já derrubou o carregamento da Home uma vez.
+    console.warn('[push] registro falhou:', e);
+    return null;
+  }
+}
+
+async function registarInterno(): Promise<string | null> {
   if (!Device.isDevice) {
     console.warn('[push] emulador não recebe push');
     return null;

@@ -14,7 +14,7 @@ import { colors, spacing, radius, type as typo } from '../../src/theme';
 /** Home — Dashboard de Segurança. */
 export default function HomeScreen() {
   const router = useRouter();
-  const { session, loading, load, checkIn, subscribe } = useSessionStore();
+  const { session, loading, error, load, checkIn, subscribe } = useSessionStore();
   const [pending, setPending] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -48,6 +48,22 @@ export default function HomeScreen() {
           onPress: () => router.push('/sos/ativo'),
         },
       ],
+    );
+  }
+
+  // Erro antes de loading: se a consulta falhou, insistir em "Carregando…"
+  // esconde a causa e deixa o usuário esperando algo que não vem.
+  if (error) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.empty}>
+          <Text style={styles.emptyTitle}>Não conseguimos carregar</Text>
+          <Text style={styles.emptyBody}>{error}</Text>
+          <Text style={styles.link} onPress={() => load()}>
+            Tentar de novo
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 

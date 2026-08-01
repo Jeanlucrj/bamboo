@@ -70,13 +70,25 @@ export default function RootLayout() {
   useEffect(() => {
     if (!session) return;
 
-    // O registro do aparelho vem ANTES do resto: é ele que produz o device_id
-    // que carimba os pings e o check-in. Sem ele o sinal chega sem origem e o
-    // painel de admin não consegue distinguir app de navegador.
+    // A sessão de viagem primeiro, sozinha e sem esperar por nada.
+    //
+    // Antes isto rodava DEPOIS de registerForPush() e registerDevice(), em
+    // cadeia. O resultado: qualquer travada no registro de push — o diálogo de
+    // permissão sem resposta, getExpoPushTokenAsync pendurado na rede — e o
+    // load() nunca acontecia. A Home ficava em "Carregando…" para sempre, sem
+    // erro nenhum, por causa de algo que ela nem usa.
+    useSessionStore.getState().load();
+
+    // Push e registro de aparelho em paralelo, isolados. São importantes — o
+    // device_id carimba os sinais e o push entrega o aviso antes do alerta —
+    // mas nenhum dos dois é pré-requisito para desenhar a tela.
     (async () => {
-      const token = await registerForPush();
-      await registerDevice(token);
-      await useSessionStore.getState().load();
+      try {
+        const token = await registerForPush();
+        await registerDevice(token);
+      } catch (e) {
+        console.warn('[sentinela] registro de push/aparelho falhou:', e);
+      }
     })();
   }, [session?.user?.id]);
 

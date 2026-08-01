@@ -21,23 +21,43 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   loading: true,
   error: null,
 
+  /**
+   * Carrega a viagem ativa.
+   *
+   * `loading` PRECISA voltar a false em todos os caminhos — inclusive quando a
+   * consulta estoura ou a rede some. Uma tela de "Carregando…" que nunca sai é
+   * pior que uma mensagem de erro: o usuário fica esperando algo que não vem e
+   * não tem o que fazer.
+   */
   async load() {
     set({ loading: true, error: null });
-    const { data, error } = await supabase
-      .from('travel_sessions')
-      .select('*')
-      .eq('status', 'active')
-      .order('starts_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
 
-    if (error) {
-      set({ error: error.message, loading: false });
-      return;
+    try {
+      const { data, error } = await supabase
+        .from('travel_sessions')
+        .select('*')
+        .eq('status', 'active')
+        .order('starts_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        set({ error: error.message, loading: false });
+        return;
+      }
+
+      set({ session: data, loading: false });
+
+      // Depois de destravar a tela: o lembrete local é conveniência e não pode
+      // segurar o render nem derrubar o load se as notificações falharem.
+      if (data) {
+        scheduleCheckinReminder(new Date(data.expected_checkin_at), data.id).catch((e) =>
+          console.warn('[sentinela] lembrete local falhou:', e),
+        );
+      }
+    } catch (e) {
+      set({ error: String(e), loading: false });
     }
-
-    set({ session: data, loading: false });
-    if (data) await scheduleCheckinReminder(new Date(data.expected_checkin_at), data.id);
   },
 
   async checkIn() {
