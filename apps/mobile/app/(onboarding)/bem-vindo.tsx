@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, spacing, radius, type as typo } from '../../src/theme';
@@ -7,8 +7,12 @@ export default function BemVindo() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      {/* ScrollView, não View: com `justifyContent: space-between` num flex
+          fixo, o conteúdo de três passos estourava a altura em telas menores e
+          empurrava o botão "Começar" para fora — o usuário via a explicação e
+          nenhuma forma de seguir adiante. */}
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.logo}>SENTINELA</Text>
 
         <Text style={styles.headline}>
@@ -24,8 +28,10 @@ export default function BemVindo() {
           <Step n="3" title="Se o silêncio passar do limite, agimos"
             body="Primeiro avisamos você. Só depois seus contatos recebem o Dossiê." />
         </View>
-      </View>
+      </ScrollView>
 
+      {/* Fora do ScrollView: o botão fica ancorado no rodapé e continua
+          alcançável sem depender de o usuário rolar até o fim. */}
       <View style={styles.footer}>
         <Pressable style={styles.primary} onPress={() => router.push('/(onboarding)/login')}>
           <Text style={styles.primaryLabel}>Começar</Text>
@@ -50,8 +56,8 @@ function Step({ n, title, body }: { n: string; title: string; body: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg, justifyContent: 'space-between' },
-  content: { padding: spacing.lg, paddingTop: spacing.xxl },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.lg },
   logo: { ...typo.caption, color: colors.brandLight, letterSpacing: 4, textAlign: 'center' },
   headline: {
     ...typo.h1, fontSize: 30, color: colors.text, textAlign: 'center',

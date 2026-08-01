@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { detectClient, storeUrl, APP_LINKS, type DetectedClient } from '@/lib/device/detect';
+import { detectClient, storeUrl, openAppUrl, type DetectedClient } from '@/lib/device/detect';
 
 const DISMISS_KEY = 'sentinela:handoff-dismissed';
 
@@ -69,7 +69,7 @@ export function AppHandoff() {
 
           <div className="mt-3 flex flex-wrap gap-2">
             <a
-              href={APP_LINKS.scheme}
+              href={openAppUrl(client.os)}
               className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white"
             >
               Abrir o app

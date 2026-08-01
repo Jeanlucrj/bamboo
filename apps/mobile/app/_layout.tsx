@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AppState, View, ActivityIndicator, Platform } from 'react-native';
+import { AppState, View, ActivityIndicator, Platform, Alert } from 'react-native';
+import * as Linking from 'expo-linking';
 import type { Session } from '@supabase/supabase-js';
 
 // ⚠️ IMPORT OBRIGATÓRIO, mesmo sem uso aparente neste arquivo.
@@ -14,6 +15,7 @@ import { supabase } from '../src/services/supabase';
 import { flushQueue } from '../src/services/location/pingQueue';
 import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
+import { handleAuthLink } from '../src/services/authLink';
 import { useSessionStore } from '../src/stores/session';
 import { colors } from '../src/theme';
 
@@ -30,6 +32,30 @@ export default function RootLayout() {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  /**
+   * Deep link do e-mail — é o que fecha o login.
+   *
+   * Dois caminhos, e os dois são necessários: `getInitialURL` cobre o app
+   * FECHADO (o toque no link é o que o abre) e o listener cobre o app já em
+   * segundo plano. Só um dos dois deixa metade dos usuários travados,
+   * dependendo de o app estar aberto ou não na hora do clique.
+   */
+  const linkTratado = useRef<string | null>(null);
+
+  useEffect(() => {
+    async function tratar(url: string | null) {
+      if (!url || linkTratado.current === url) return;
+      linkTratado.current = url;
+
+      const r = await handleAuthLink(url);
+      if (r.handled && !r.ok) Alert.alert('Não foi possível entrar', r.error);
+    }
+
+    Linking.getInitialURL().then(tratar);
+    const sub = Linking.addEventListener('url', (e) => tratar(e.url));
+    return () => sub.remove();
   }, []);
 
   // Guarda de rotas

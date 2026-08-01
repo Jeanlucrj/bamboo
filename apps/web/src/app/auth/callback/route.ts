@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase/server';
 import { safeNextPath } from '@/lib/auth/nextPath';
+import { resolveOrigin } from '@/lib/auth/origin';
 
 /**
  * Destino do link mágico e do OAuth.
@@ -13,7 +14,10 @@ import { safeNextPath } from '@/lib/auth/nextPath';
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+  // Do host de onde o usuário veio — nunca de NEXT_PUBLIC_SITE_URL. Ver o
+  // comentário em lib/auth/origin.ts: fixar isso mandava quem entrou pelo IP
+  // da rede local direto para uma tela de erro.
+  const origin = resolveOrigin(request);
   const next = safeNextPath(searchParams.get('next'));
 
   const fail = (reason: string) =>

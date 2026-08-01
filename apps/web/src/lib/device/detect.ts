@@ -82,9 +82,10 @@ export function detectClient(
   };
 }
 
-/** Loja e deep link. Os IDs só existem depois da primeira submissão. */
+/** Loja e deep link. Os IDs de loja só existem depois da primeira submissão. */
 export const APP_LINKS = {
   scheme: 'sentinela://',
+  package: 'com.sentinela.app',
   ios: process.env.NEXT_PUBLIC_IOS_APP_ID
     ? `https://apps.apple.com/app/id${process.env.NEXT_PUBLIC_IOS_APP_ID}`
     : null,
@@ -92,6 +93,27 @@ export const APP_LINKS = {
     ? `https://play.google.com/store/apps/details?id=${process.env.NEXT_PUBLIC_ANDROID_PACKAGE}`
     : null,
 } as const;
+
+/**
+ * URL para abrir o app instalado.
+ *
+ * No Android não basta `sentinela://`. O Chrome ignora navegação para esquema
+ * custom vinda de um `<a href>` — proteção contra sites que sequestram o
+ * usuário para outro aplicativo. O caminho suportado é a URL `intent://`, que
+ * declara o esquema e o pacote e cai numa alternativa se o app não existir.
+ *
+ * No iOS o esquema direto funciona; se o app não estiver instalado o Safari
+ * apenas mostra um aviso, sem quebrar a página.
+ */
+export function openAppUrl(os: DeviceOS): string {
+  if (os === 'android') {
+    const fallback = APP_LINKS.android
+      ? `S.browser_fallback_url=${encodeURIComponent(APP_LINKS.android)};`
+      : '';
+    return `intent://open#Intent;scheme=sentinela;package=${APP_LINKS.package};${fallback}end`;
+  }
+  return APP_LINKS.scheme;
+}
 
 export function storeUrl(os: DeviceOS): string | null {
   if (os === 'ios') return APP_LINKS.ios;

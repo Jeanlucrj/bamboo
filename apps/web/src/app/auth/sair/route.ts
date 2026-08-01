@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { resolveOrigin } from '@/lib/auth/origin';
 
 /**
  * Logout.
@@ -8,7 +9,8 @@ import { createServerClient } from '@/lib/supabase/server';
  * página de terceiro e derrubaria a sessão do usuário sem que ele pedisse.
  */
 export async function POST(request: NextRequest) {
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+  // Mesmo motivo do callback: devolver o usuário ao host de onde ele veio.
+  const origin = resolveOrigin(request);
   const supabase = await createServerClient();
 
   // scope 'local' encerra só esta sessão do navegador. 'global' revogaria
