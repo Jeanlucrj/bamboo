@@ -1,0 +1,92 @@
+<!--
+  Link de acesso — template do GoTrue.
+
+  Duas decisões que não são estéticas:
+
+  1. O link usa {{ .TokenHash }}, não {{ .ConfirmationURL }}.
+     O ConfirmationURL passa pelo /auth/v1/verify do Supabase, que devolve o
+     token conforme o fluxo em que o pedido foi feito. No fluxo implícito ele
+     volta no FRAGMENTO da URL (#access_token=...) — e fragmento o navegador
+     não envia ao servidor. Um route handler no Next nunca o vê, e o usuário
+     cai em "link inválido" sem entender por quê. Com token_hash o valor vem na
+     query, o servidor lê, chama verifyOtp e a sessão nasce em cookie.
+
+  2. Tabelas e estilo inline.
+     Outlook e Gmail descartam <style> em <head> e ignoram flex/grid. Layout de
+     e-mail é 2003 e não adianta discutir.
+
+  Variáveis disponíveis: .TokenHash .Token .SiteURL .RedirectTo .Email
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#f1f5f9;margin:0;padding:32px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:520px;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,0.12);">
+
+        <tr>
+          <td style="background-color:#0b1120;padding:22px 32px;">
+            <span style="color:#2dd4bf;font-size:13px;font-weight:800;letter-spacing:3.5px;">
+              SENTINELA
+            </span>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:36px 32px 8px 32px;">
+            <h1 style="margin:0;font-size:22px;line-height:1.3;color:#0f172a;font-weight:700;">
+              Seu link de acesso
+            </h1>
+            <p style="margin:14px 0 0 0;font-size:15px;line-height:1.65;color:#475569;">
+              Toque no botão abaixo para entrar na sua conta. Não precisa de senha.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="center" style="padding:28px 32px 8px 32px;">
+            <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=magiclink"
+               style="display:inline-block;background-color:#0f766e;color:#ffffff;text-decoration:none;
+                      font-size:15px;font-weight:600;padding:15px 40px;border-radius:10px;">
+              Entrar no Sentinela
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 32px 0 32px;">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
+              O link expira em 1 hora e funciona uma única vez. Abra-o no mesmo navegador
+              em que você pediu o acesso.
+            </p>
+            <p style="margin:14px 0 0 0;font-size:13px;line-height:1.6;color:#64748b;">
+              Se o botão não funcionar, copie este endereço:
+            </p>
+            <p style="margin:6px 0 0 0;font-size:12px;line-height:1.5;color:#0f766e;word-break:break-all;">
+              {{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=magiclink
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:26px 32px 32px 32px;">
+            <div style="border-top:1px solid #e2e8f0;padding-top:18px;">
+              <!-- Este parágrafo não é boilerplate: quem recebe um link de acesso
+                   que não pediu precisa saber que não há nada a fazer. Mandar a
+                   pessoa "clicar aqui para cancelar" seria criar o phishing. -->
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
+                Você não pediu este link? Ignore este e-mail — sem o clique, nada acontece
+                e ninguém entra na conta.
+              </p>
+              <p style="margin:12px 0 0 0;font-size:12px;line-height:1.6;color:#94a3b8;">
+                O Sentinela é uma ferramenta de apoio e não substitui os serviços oficiais
+                de emergência.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

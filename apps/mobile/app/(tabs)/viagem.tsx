@@ -1,0 +1,227 @@
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert } from 'react-native';
+import { CHECKIN_PRESETS } from '@sentinela/shared';
+import { useSessionStore } from '../../src/stores/session';
+import { supabase } from '../../src/services/supabase';
+import {
+  startBackgroundTracking,
+  stopBackgroundTracking,
+  isTrackingActive,
+} from '../../src/services/location/backgroundLocation';
+import { colors, spacing, radius, type as typo } from '../../src/theme';
+
+/** Sessão de Viagem — regras do alarme. */
+export default function ViagemScreen() {
+  const { session, load } = useSessionStore();
+  const [tracking, setTracking] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    isTrackingActive().then(setTracking);
+  }, [session?.id]);
+
+  if (!session) {
+    return (
+      <View style={styles.screen}>
+        <Text style={styles.muted}>Nenhuma viagem ativa.</Text>
+      </View>
+    );
+  }
+
+  const currentHours = parseIntervalHours(session.checkin_interval);
+
+  async function setInterval(hours: number) {
+    setSaving(true);
+    await supabase
+      .from('travel_sessions')
+      .update({ checkin_interval: `${hours} hours` })
+      .eq('id', session!.id);
+    await load();
+    setSaving(false);
+  }
+
+  async function toggleTracking(value: boolean) {
+    try {
+      if (value) await startBackgroundTracking(session!.id);
+      else await stopBackgroundTracking();
+      setTracking(value);
+      await supabase
+        .from('travel_sessions')
+        .update({ gps_tracking_enabled: value })
+        .eq('id', session!.id);
+    } catch (e) {
+      const reason = String(e);
+      Alert.alert(
+        'Permissão necessária',
+        reason.includes('background')
+          ? 'Precisamos da permissão "Sempre" para localização. Abra Ajustes > Sentinela > Localização e escolha "Sempre".'
+          : 'Não conseguimos ativar o rastreamento. Verifique as permissões de localização.',
+      );
+      setTracking(false);
+    }
+  }
+
+  async function togglePassive(value: boolean) {
+    await supabase
+      .from('travel_sessions')
+      .update({ passive_checkin_enabled: value })
+      .eq('id', session!.id);
+    await load();
+  }
+
+  const graceHours = parseIntervalHours(session.grace_period);
+  const alertHours = parseIntervalHours(session.alert_delay);
+
+  return (
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.h1}>{session.title}</Text>
+
+      <Text style={styles.sectionLabel}>SE EU FICAR SEM DAR SINAL POR</Text>
+      <View style={styles.presets}>
+        {CHECKIN_PRESETS.map((p) => {
+          const active = p.hours === currentHours;
+          return (
+            <Pressable
+              key={p.hours}
+              disabled={saving}
+              onPress={() => setInterval(p.hours)}
+              style={[styles.preset, active && styles.presetActive]}
+            >
+              <Text style={[styles.presetLabel, active && styles.presetLabelActive]}>{p.label}</Text>
+              <Text style={styles.presetHint}>{p.hint}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Tradução das regras para linguagem natural. Se o usuário não entende
+          exatamente o que vai acontecer, ele não confia — e não paga. */}
+      <View style={styles.summary}>
+        <Text style={styles.summaryText}>
+          Se você ficar <Text style={styles.bold}>{currentHours}h</Text> sem dar sinal de vida,
+          avisamos <Text style={styles.bold}>só você</Text>.{'\n\n'}
+          Passadas mais <Text style={styles.bold}>{graceHours}h</Text> sem resposta, insistimos por
+          push e SMS.{'\n\n'}
+          Se ainda assim nada acontecer em <Text style={styles.bold}>{alertHours}h</Text>, seus
+          contatos de emergência recebem o Dossiê.
+        </Text>
+      </View>
+
+      <Text style={styles.sectionLabel}>FONTES DE SINAL DE VIDA</Text>
+
+      <Row
+        title="GPS em segundo plano"
+        subtitle="Ping discreto por deslocamento ou a cada 4h. Menos de 2% de bateria/dia."
+        value={tracking}
+        onChange={toggleTracking}
+      />
+      <Row
+        title="Check-in passivo por deslocamento"
+        subtitle={`Se o celular se afastar mais de ${session.movement_threshold_m} m, o cronômetro zera sozinho.`}
+        value={session.passive_checkin_enabled}
+        onChange={togglePassive}
+      />
+
+      {/* Este aviso não é letra miúda: é a diferença entre o usuário confiar
+          no app e ser pego de surpresa por um alarme que ele causou. */}
+      <View style={styles.notice}>
+        <Text style={styles.noticeTitle}>Celular parado não conta</Text>
+        <Text style={styles.noticeText}>
+          Só deslocamento real vale como sinal de vida. Um aparelho esquecido no quarto não prova
+          que você está bem — por isso ele não segura o alarme. Se for passar o dia longe do
+          telefone, faça o check-in manual antes de sair.
+        </Text>
+      </View>
+
+      <Text style={styles.footnote}>
+        O iOS não garante execução periódica em background. O intervalo de 4h é o alvo — na prática
+        o sistema entrega quando pode. Por isso o app combina três fontes: deslocamento, abertura do
+        app e check-in manual.
+      </Text>
+    </ScrollView>
+  );
+}
+
+function Row({
+  title, subtitle, value, onChange,
+}: { title: string; subtitle: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <View style={styles.row}>
+      <View style={{ flex: 1, paddingRight: spacing.md }}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={styles.rowSub}>{subtitle}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ true: colors.brand, false: colors.surfaceAlt }}
+        thumbColor="#fff"
+      />
+    </View>
+  );
+}
+
+/** Postgres devolve interval como '24:00:00' ou '1 day 00:00:00'. */
+function parseIntervalHours(interval: string): number {
+  const days = /(\d+)\s+day/.exec(interval);
+  const time = /(\d+):(\d{2}):/.exec(interval);
+  return (days ? Number(days[1]) * 24 : 0) + (time ? Number(time[1]) : 0);
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  h1: { ...typo.h1, color: colors.text, marginBottom: spacing.lg },
+  muted: { ...typo.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+
+  sectionLabel: {
+    ...typo.caption, color: colors.textFaint, letterSpacing: 1.2,
+    marginTop: spacing.lg, marginBottom: spacing.sm,
+  },
+  presets: { gap: spacing.sm },
+  preset: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+  presetActive: { borderColor: colors.brandLight, backgroundColor: colors.surfaceAlt },
+  presetLabel: { ...typo.h2, color: colors.textMuted },
+  presetLabelActive: { color: colors.text },
+  presetHint: { ...typo.caption, color: colors.textFaint, marginTop: 2 },
+
+  summary: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.brandLight,
+  },
+  summaryText: { ...typo.small, color: colors.text, lineHeight: 22 },
+  bold: { fontWeight: '700', color: colors.brandLight },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  rowTitle: { ...typo.body, color: colors.text, fontWeight: '600' },
+  rowSub: { ...typo.caption, color: colors.textMuted, marginTop: 2, lineHeight: 17 },
+
+  notice: {
+    marginTop: spacing.lg,
+    backgroundColor: '#3A2A0C',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.grace,
+  },
+  noticeTitle: { ...typo.small, color: '#FDE68A', fontWeight: '700' },
+  noticeText: { ...typo.caption, color: '#FDE68A', marginTop: 4, lineHeight: 18 },
+
+  footnote: { ...typo.caption, color: colors.textFaint, marginTop: spacing.lg, lineHeight: 18 },
+});

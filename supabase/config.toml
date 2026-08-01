@@ -1,0 +1,143 @@
+project_id = "sentinela"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Espelha o projeto remoto (mewxuybwxdznszkcpdcy roda 17.6). Divergir daqui faz
+# o ambiente local aceitar SQL que o de produção recusa — e vice-versa.
+major_version = 17
+
+[db.pooler]
+enabled = true
+port = 54329
+pool_mode = "transaction"
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+# 3002, não 3000: nesta máquina a 3000 e a 3001 estão ocupadas por outros
+# projetos. Deixar o Next escolher a porta sozinho é pior do que parece — ele
+# cai numa porta livre qualquer, o link mágico volta para a URL registrada aqui
+# e o usuário aterrissa no app ERRADO, já autenticado em outro contexto.
+# A porta está fixada em apps/web/package.json; mudar aqui exige mudar lá.
+site_url = "http://localhost:3002"
+# O link mágico da web volta em /auth/callback. Um redirect fora desta lista é
+# recusado pelo GoTrue e o usuário cai numa página de erro do Supabase.
+additional_redirect_urls = [
+  "http://localhost:3002/auth/callback",
+  "http://localhost:3000/auth/callback",
+  "sentinela://callback",
+  "exp://127.0.0.1:8081/--/callback"
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+
+# ---------------------------------------------------------------------
+# ATENÇÃO ao rodar `supabase config push`
+# ---------------------------------------------------------------------
+# O push NÃO faz merge com o que está no painel: ele envia o config inteiro, e
+# tudo que este arquivo não declarar é preenchido com o DEFAULT DO CLI, não com
+# o valor atual do projeto. Na primeira execução isso desligou MFA TOTP e
+# derrubou max_frequency para 1s sem nada aqui pedir por isso.
+#
+# Regra: toda configuração de auth que importa precisa estar escrita abaixo,
+# mesmo quando o valor coincide com o default. Omitir não é "manter".
+# ---------------------------------------------------------------------
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_signup = true
+# Desligado: no fluxo passwordless o link mágico JÁ é a confirmação — clicar
+# nele prova a posse do e-mail. Com confirmations ligado, um usuário novo
+# recebia o template "Confirm signup" em vez de "Magic Link"; os dois funcionam
+# no nosso /auth/callback, mas o primeiro é uma etapa a mais sem ganho algum.
+#
+# Se um dia entrar login por SENHA, isto precisa voltar para true: aí sim a
+# confirmação é a única prova de que quem cadastrou é dono do endereço.
+enable_confirmations = false
+double_confirm_changes = true
+otp_length = 8
+otp_expiry = 3600
+# Intervalo mínimo entre e-mails para o mesmo endereço. Com 1s (default do CLI)
+# o formulário de login vira uma máquina de spam apontada para terceiros: basta
+# digitar o e-mail de alguém e segurar o botão.
+max_frequency = "1m0s"
+
+# ---------------------------------------------------------------------
+# Template do link de acesso
+# ---------------------------------------------------------------------
+# O template padrão do Supabase manda um e-mail sem marca nenhuma e com um link
+# que passa pelo /auth/v1/verify — o que, fora do fluxo PKCE, devolve o token no
+# FRAGMENTO da URL e o nosso route handler nunca o enxerga. O template em
+# supabase/templates/magic_link.html usa {{ .TokenHash }} na query, que funciona
+# nos dois fluxos.
+#
+# COMENTADO PORQUE ESTÁ BLOQUEADO, não porque está errado. O push devolve:
+#   "Email template modification is not available for free tier projects using
+#    the default email provider."
+# Template customizado e SMTP próprio são a MESMA compra: sem SMTP, o Supabase
+# recusa o template. Descomente os dois blocos juntos — este e o [smtp] abaixo.
+# Enquanto isso, deixar isto ativo faz TODO `config push` falhar, inclusive os
+# que não têm nada a ver com e-mail.
+#
+# [auth.email.template.magic_link]
+# subject = "Seu link de acesso ao Sentinela"
+# content_path = "./supabase/templates/magic_link.html"
+#
+# [auth.email.template.confirmation]
+# subject = "Confirme seu e-mail no Sentinela"
+# content_path = "./supabase/templates/magic_link.html"
+
+# ---------------------------------------------------------------------
+# SMTP próprio — OBRIGATÓRIO antes de qualquer usuário real
+# ---------------------------------------------------------------------
+# O SMTP padrão do Supabase **só entrega para membros da organização** do
+# projeto e tem teto de poucos e-mails por hora. Serve para o dono testar e mais
+# nada: para qualquer outro endereço o e-mail é descartado em silêncio, sem
+# erro na API. Num produto cujo canal de emergência é e-mail, isso é falha
+# crítica, não limitação de plano.
+#
+# Para ligar, exporte as variáveis e rode `supabase config push`:
+#   SMTP_HOST=smtp.resend.com  SMTP_PORT=587  SMTP_USER=resend
+#   SMTP_PASS=<RESEND_API_KEY> SMTP_ADMIN_EMAIL=alerta@seudominio.com
+#
+# O domínio precisa estar verificado no Resend (SPF + DKIM), senão a entrega
+# cai em spam — o que, para um alerta de emergência, é o mesmo que não enviar.
+#
+# [auth.email.smtp]
+# enabled = true
+# host = "env(SMTP_HOST)"
+# port = 587
+# user = "env(SMTP_USER)"
+# pass = "env(SMTP_PASS)"
+# admin_email = "env(SMTP_ADMIN_EMAIL)"
+# sender_name = "Sentinela"
+
+[auth.sms]
+enable_signup = false
+
+[edge_runtime]
+enabled = true
+policy = "oneshot"
+inspector_port = 8083
+
+[analytics]
+enabled = false

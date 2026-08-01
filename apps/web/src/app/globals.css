@@ -1,0 +1,430 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: 15 118 110;
+    --brand-light: 20 184 166;
+
+    /* Glassmorphism & Surface tokens */
+    --glass-bg: rgba(15, 23, 42, 0.75);
+    --glass-bg-hover: rgba(30, 41, 59, 0.85);
+    --glass-border: rgba(51, 65, 85, 0.6);
+    --glass-border-hover: rgba(20, 184, 166, 0.5);
+    --glass-blur: 20px;
+
+    /* Glow tokens */
+    --glow-teal: rgba(20, 184, 166, 0.5);
+    --glow-cyan: rgba(6, 182, 212, 0.5);
+    --glow-emerald: rgba(16, 185, 129, 0.5);
+    --glow-amber: rgba(245, 158, 11, 0.5);
+    --glow-red: rgba(239, 68, 68, 0.6);
+
+    /* Gradient tokens */
+    --gradient-brand: linear-gradient(135deg, #14B8A6 0%, #06B6D4 50%, #3B82F6 100%);
+    --gradient-surface: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    --gradient-card-header: linear-gradient(90deg, rgba(20, 184, 166, 0.15) 0%, transparent 100%);
+  }
+
+  body {
+    background-color: #070b14;
+    color: #f8fafc;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand-light));
+    outline-offset: 2px;
+  }
+
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070b14;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 4px;
+    border: 2px solid #070b14;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(20, 184, 166, 0.6);
+  }
+}
+
+/* ================================================================
+   GRADIENT TEXT CLASSES
+   ================================================================ */
+.gradient-text-hero {
+  background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #2dd4bf;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #14B8A6 0%, #06B6D4 50%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #14B8A6;
+}
+
+.gradient-heading {
+  background: linear-gradient(135deg, #ffffff 30%, #a5f3fc 70%, #2dd4bf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #ffffff;
+}
+
+.gradient-teal-text {
+  background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #2dd4bf;
+}
+
+/* ================================================================
+   LIGHT THEME OVERRIDES (MODO DIA)
+   ================================================================ */
+html.light body,
+html[data-theme="light"] body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .ambient-bg,
+html[data-theme="light"] .ambient-bg {
+  background-color: #f8fafc;
+}
+
+html.light .ambient-bg::before,
+html[data-theme="light"] .ambient-bg::before {
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 70%);
+}
+
+html.light .ambient-bg::after,
+html[data-theme="light"] .ambient-bg::after {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(15, 118, 110, 0.06) 50%, transparent 70%);
+}
+
+html.light .bg-grid-pattern,
+html[data-theme="light"] .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+}
+
+html.light .modern-card,
+html[data-theme="light"] .modern-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 30px -10px rgba(148, 163, 184, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+html.light .modern-card:hover,
+html[data-theme="light"] .modern-card:hover {
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 20px 40px -15px rgba(148, 163, 184, 0.4), 0 0 20px rgba(20, 184, 166, 0.2);
+}
+
+html.light .glass-card,
+html[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+html.light .gradient-heading,
+html[data-theme="light"] .gradient-heading {
+  background: linear-gradient(135deg, #0f172a 30%, #0f766e 70%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #0f172a;
+}
+
+html.light .gradient-text-hero,
+html[data-theme="light"] .gradient-text-hero {
+  background: linear-gradient(135deg, #0f766e 0%, #0284c7 50%, #4338ca 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #0f766e;
+}
+
+/* Ambient mesh background for dashboard & marketing */
+.ambient-bg {
+  position: relative;
+  background-color: #070b14;
+}
+
+.ambient-bg::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  left: 20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, rgba(6, 182, 212, 0.04) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-bg::after {
+  content: '';
+  position: fixed;
+  bottom: 10%;
+  right: 15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(15, 118, 110, 0.04) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Background grid overlay */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Modern Card */
+.modern-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modern-card:hover {
+  border-color: rgba(20, 184, 166, 0.4);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 20px rgba(20, 184, 166, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Primary Gradient Button */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%);
+  color: #042f2e;
+  font-weight: 700;
+  border-radius: 0.875rem;
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.35);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary-gradient:hover {
+  background: linear-gradient(135deg, #2dd4bf 0%, #22d3ee 100%);
+  box-shadow: 0 6px 28px rgba(20, 184, 166, 0.5);
+  transform: translateY(-1.5px);
+}
+
+.btn-primary-gradient:active {
+  transform: translateY(0);
+}
+
+/* Radar Sweep Animation */
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(14deg); }
+  75% { transform: rotate(-14deg); }
+}
+
+.animate-wave {
+  display: inline-block;
+  animation: wave 1.5s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+/* Keyframes */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(20, 184, 166, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+/* =====================================================================
+   Classes usadas no JSX que não existiam
+   ---------------------------------------------------------------------
+   Encontradas numa varredura cruzando as classes referenciadas nos .tsx
+   com as definidas aqui e no tailwind.config. CSS ausente falha em
+   SILÊNCIO: o navegador ignora a classe desconhecida e o elemento
+   simplesmente aparece sem estilo, sem erro no console e sem quebrar o
+   build. `glass-card` estava em 13 lugares — os cartões do painel de
+   admin e das seções de marketing renderizavam como texto solto.
+   ===================================================================== */
+
+/* Cartão de vidro. Irmão mais leve do .modern-card: mesma linguagem, menos
+   sombra, para quando há muitos na mesma tela (grades de KPI, tabelas). */
+.glass-card {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(51, 65, 85, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(51, 65, 85, 0.75);
+}
+
+/* Brilho de botão primário. Só a sombra — o gradiente vem das classes
+   Tailwind no próprio elemento, então esta classe não pode definir
+   background ou sobrescreveria o hover de lá. */
+.glow-btn {
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.28);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.glow-btn:hover {
+  box-shadow: 0 6px 28px rgba(20, 184, 166, 0.45);
+  transform: translateY(-1.5px);
+}
+
+.glow-btn:active {
+  transform: translateY(0);
+}
+
+/* Divisória do rodapé: linha que nasce e morre transparente. */
+.gradient-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(20, 184, 166, 0.35) 50%,
+    transparent 100%
+  );
+}
+
+/* =====================================================================
+   Keyframes que o tailwind.config referencia e ninguém definiu
+   ---------------------------------------------------------------------
+   O bloco `theme.extend.animation` lista 13 animações, mas não há
+   `theme.extend.keyframes` no config nem estes @keyframes aqui. O
+   Tailwind gera `animation: fadeInUp 0.6s ...` apontando para um nome
+   inexistente — a regra é válida, o navegador aceita, e nada acontece.
+   Verificado: nenhum elemento animado parte de opacity-0, então nada
+   estava invisível; o que se perdia era só o movimento.
+   ===================================================================== */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* Ponto de status pulsando. Sutil de propósito: num painel de plantão
+   com vários pontos, pulso forte vira ruído e treina a pessoa a ignorar. */
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+
+@keyframes ringPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(20, 184, 166, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+}
+
+@keyframes gridMove {
+  0%   { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Respeita quem pediu menos movimento no sistema. Sem isto, um painel
+   cheio de pulsos é hostil para quem tem sensibilidade vestibular. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

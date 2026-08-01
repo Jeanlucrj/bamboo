@@ -1,0 +1,33 @@
+{
+  "name": "sentinela",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Micro SaaS de segurança para nômades digitais, influenciadores e viajantes solo. Dead Man's Switch com rastreamento híbrido e diário de bordo automatizado.",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@sentinela/web --log-prefix=none",
+    "dev:web": "turbo run dev --filter=@sentinela/web --log-prefix=none",
+    "dev:mobile": "turbo run dev --filter=@sentinela/mobile",
+    "dev:all": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:diff": "supabase db diff -f",
+    "db:push": "supabase db push",
+    "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/types/database.ts",
+    "fn:serve": "supabase functions serve --no-verify-jwt",
+    "fn:deploy": "supabase functions deploy"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "prettier": "^3.4.2",
+    "supabase": "^2.2.1"
+  }
+}

@@ -1,0 +1,38 @@
+node_modules/
+.pnpm-store/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+.vercel/
+
+# Expo
+.expo/
+.expo-shared/
+apps/mobile/ios/
+apps/mobile/android/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+
+# Env — NUNCA commitar. A service_role key dá acesso total ao banco ignorando RLS.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# Logs / SO
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

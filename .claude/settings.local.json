@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Set-Location \"c:\\\\Users\\\\User\\\\.gemini\\\\antigravity\\\\scratch\\\\Sistema Seguranca Nomade Digital\"; pnpm --filter @sentinela/web run typecheck; \"WEB=$LASTEXITCODE\"; pnpm --filter @sentinela/mobile run typecheck; \"MOBILE=$LASTEXITCODE\")",
+      "Bash(break)"
+    ]
+  }
+}
