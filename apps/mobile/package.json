@@ -13,6 +13,8 @@
     "build:prod": "eas build --profile production"
   },
   "dependencies": {
+    "@babel/runtime": "^7.29.7",
+    "@expo/metro-runtime": "~4.0.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@sentinela/shared": "workspace:*",
     "@supabase/supabase-js": "^2.47.10",

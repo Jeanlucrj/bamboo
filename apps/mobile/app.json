@@ -1,8 +1,10 @@
 {
   "expo": {
     "name": "Sentinela",
-    "slug": "sentinela",
+    "slug": "bamboo",
     "scheme": "sentinela",
+
+    "owner": "jeanlucmavericks-team",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
