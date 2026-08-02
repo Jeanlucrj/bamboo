@@ -9,10 +9,12 @@ import { CheckinButton } from '../../src/components/CheckinButton';
 import { PanicButton } from '../../src/components/PanicButton';
 import { useSessionStore } from '../../src/stores/session';
 import { queueSize, flushQueue } from '../../src/services/location/pingQueue';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 /** Home — Dashboard de Segurança. */
 export default function HomeScreen() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const router = useRouter();
   const { session, loading, error, load, checkIn, subscribe } = useSessionStore();
   const [pending, setPending] = useState(0);
@@ -97,7 +99,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brandLight} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brandLight} />
         }
       >
         <Text style={styles.tripTitle}>{session.title}</Text>
@@ -148,31 +150,31 @@ function relativeTime(iso: string): string {
   return `há ${Math.floor(h / 24)} dias`;
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  tripTitle: { ...typo.h2, color: colors.text, textAlign: 'center' },
-  tripSub: { ...typo.small, color: colors.textFaint, textAlign: 'center', marginTop: 2 },
-  muted: { ...typo.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+  tripTitle: { ...typo.h2, color: c.text, textAlign: 'center' },
+  tripSub: { ...typo.small, color: c.textFaint, textAlign: 'center', marginTop: 2 },
+  muted: { ...typo.body, color: c.textMuted, textAlign: 'center', marginTop: 80 },
 
   empty: { flex: 1, justifyContent: 'center', padding: spacing.xl },
-  emptyTitle: { ...typo.h1, color: colors.text, textAlign: 'center' },
+  emptyTitle: { ...typo.h1, color: c.text, textAlign: 'center' },
   emptyBody: {
-    ...typo.body, color: colors.textMuted, textAlign: 'center',
+    ...typo.body, color: c.textMuted, textAlign: 'center',
     marginTop: spacing.md, lineHeight: 24,
   },
-  link: { ...typo.body, color: colors.brandLight, textAlign: 'center', marginTop: spacing.lg, fontWeight: '600' },
+  link: { ...typo.body, color: c.brandLight, textAlign: 'center', marginTop: spacing.lg, fontWeight: '600' },
 
   signalCard: {
     marginTop: spacing.xl,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.md,
   },
-  signalLabel: { ...typo.caption, color: colors.textFaint, letterSpacing: 1.2 },
-  signalValue: { ...typo.h2, color: colors.text, marginTop: 4 },
-  signalTime: { ...typo.small, color: colors.textMuted, marginTop: 2 },
-  queueWarn: { ...typo.caption, color: colors.grace, marginTop: spacing.sm, lineHeight: 17 },
+  signalLabel: { ...typo.caption, color: c.textFaint, letterSpacing: 1.2 },
+  signalValue: { ...typo.h2, color: c.text, marginTop: 4 },
+  signalTime: { ...typo.small, color: c.textMuted, marginTop: 2 },
+  queueWarn: { ...typo.caption, color: c.grace, marginTop: spacing.sm, lineHeight: 17 },
 });

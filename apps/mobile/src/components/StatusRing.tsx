@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useEffect, useState } from 'react';
 import Svg, { Circle } from 'react-native-svg';
 import { STATE_META, type SafetyState } from '@sentinela/shared';
-import { colors, stateColor, type as typo } from '../theme';
+import { stateColor, type as typo, useStyles, useColors, type Palette } from '../theme';
 
 type Props = {
   state: SafetyState;
@@ -19,6 +19,8 @@ type Props = {
  * e verificável na tela.
  */
 export function StatusRing({ state, lastSignalAt, expectedCheckinAt, size = 220 }: Props) {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function StatusRing({ state, lastSignalAt, expectedCheckinAt, size = 220 
   const stroke = 14;
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
-  const color = stateColor[state] ?? colors.idle;
+  const color = stateColor[state] ?? c.idle;
   const meta = STATE_META[state];
 
   return (
@@ -45,7 +47,7 @@ export function StatusRing({ state, lastSignalAt, expectedCheckinAt, size = 220 
         <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
           <Circle
             cx={size / 2} cy={size / 2} r={r}
-            stroke={colors.surfaceAlt} strokeWidth={stroke} fill="none"
+            stroke={c.surfaceAlt} strokeWidth={stroke} fill="none"
           />
           <Circle
             cx={size / 2} cy={size / 2} r={r}
@@ -82,14 +84,14 @@ function formatRemaining(ms: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-const styles = StyleSheet.create({
+const criarEstilos = (c: Palette) => StyleSheet.create({
   center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
   label: { ...typo.caption, letterSpacing: 1.6, marginBottom: 6 },
-  countdown: { ...typo.display, color: colors.text, fontVariant: ['tabular-nums'] },
-  hint: { ...typo.small, color: colors.textFaint, marginTop: 2 },
+  countdown: { ...typo.display, color: c.text, fontVariant: ['tabular-nums'] },
+  hint: { ...typo.small, color: c.textFaint, marginTop: 2 },
   description: {
     ...typo.small,
-    color: colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
     marginTop: 20,
     paddingHorizontal: 32,

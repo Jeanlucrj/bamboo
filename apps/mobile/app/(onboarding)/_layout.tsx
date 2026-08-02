@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { colors } from '../../src/theme';
+import { useColors } from '../../src/theme';
 
 /**
  * Layout do onboarding.
@@ -11,6 +11,8 @@ import { colors } from '../../src/theme';
  * era isso que estampava "(onboarding)/bem-vindo" no topo da tela.
  */
 export default function OnboardingLayout() {
+  const colors = useColors();
+
   return (
     <Stack
       screenOptions={{

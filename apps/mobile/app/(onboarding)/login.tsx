@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/services/supabase';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 export default function Login() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,7 +49,7 @@ export default function Login() {
             <TextInput
               style={styles.input}
               placeholder="seu@email.com"
-              placeholderTextColor={colors.textFaint}
+              placeholderTextColor={c.textFaint}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -90,36 +92,36 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg, justifyContent: 'space-between' },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg, justifyContent: 'space-between' },
   content: { padding: spacing.lg, paddingTop: spacing.xxl },
-  title: { ...typo.h1, color: colors.text, marginBottom: spacing.xl },
+  title: { ...typo.h1, color: c.text, marginBottom: spacing.xl },
   input: {
     height: 56,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
-    color: colors.text,
+    color: c.text,
     fontSize: 16,
   },
-  error: { ...typo.small, color: colors.alert, marginTop: spacing.sm },
+  error: { ...typo.small, color: c.alert, marginTop: spacing.sm },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: colors.brand,
+    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
     alignItems: 'center', justifyContent: 'center', marginTop: spacing.md,
   },
   primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
-  divider: { ...typo.caption, color: colors.textFaint, textAlign: 'center', marginVertical: spacing.md },
+  divider: { ...typo.caption, color: c.textFaint, textAlign: 'center', marginVertical: spacing.md },
   social: {
-    height: 52, borderRadius: radius.md, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.border,
+    height: 52, borderRadius: radius.md, backgroundColor: c.surface,
+    borderWidth: 1, borderColor: c.border,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
   },
-  socialLabel: { ...typo.body, color: colors.text, fontWeight: '600' },
-  sentBox: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg },
-  sentTitle: { ...typo.h2, color: colors.text },
-  sentBody: { ...typo.small, color: colors.textMuted, marginTop: spacing.sm, lineHeight: 20 },
-  link: { ...typo.small, color: colors.brandLight, marginTop: spacing.md, fontWeight: '600' },
-  legal: { ...typo.caption, color: colors.textFaint, padding: spacing.lg, lineHeight: 17, textAlign: 'center' },
+  socialLabel: { ...typo.body, color: c.text, fontWeight: '600' },
+  sentBox: { backgroundColor: c.surface, borderRadius: radius.md, padding: spacing.lg },
+  sentTitle: { ...typo.h2, color: c.text },
+  sentBody: { ...typo.small, color: c.textMuted, marginTop: spacing.sm, lineHeight: 20 },
+  link: { ...typo.small, color: c.brandLight, marginTop: spacing.md, fontWeight: '600' },
+  legal: { ...typo.caption, color: c.textFaint, padding: spacing.lg, lineHeight: 17, textAlign: 'center' },
 });

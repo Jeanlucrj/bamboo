@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, Linking, Platform } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { requestTrackingPermissions } from '../../src/services/location/backgroundLocation';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, type Palette } from '../../src/theme';
 
 /**
  * Tela de PRIMING — precede o prompt nativo.
@@ -14,6 +14,7 @@ import { colors, spacing, radius, type as typo } from '../../src/theme';
  * para que ninguém veja o prompt nativo sem antes entender o porquê.
  */
 export default function PermissoesLocalizacao() {
+  const styles = useStyles(criarEstilos);
   const router = useRouter();
   const [denied, setDenied] = useState<null | 'foreground' | 'background'>(null);
 
@@ -88,6 +89,7 @@ export default function PermissoesLocalizacao() {
 }
 
 function Bullet({ icon, title, body }: { icon: string; title: string; body: string }) {
+  const styles = useStyles(criarEstilos);
   return (
     <View style={styles.bullet}>
       <Text style={styles.bulletIcon}>{icon}</Text>
@@ -99,19 +101,19 @@ function Bullet({ icon, title, body }: { icon: string; title: string; body: stri
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg, justifyContent: 'space-between' },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg, justifyContent: 'space-between' },
   content: { padding: spacing.lg, paddingTop: spacing.xxl },
   emoji: { fontSize: 56, textAlign: 'center' },
   title: {
-    ...typo.h1, color: colors.text, textAlign: 'center',
+    ...typo.h1, color: c.text, textAlign: 'center',
     marginTop: spacing.lg, lineHeight: 36,
   },
   bullets: { marginTop: spacing.xl, gap: spacing.lg },
   bullet: { flexDirection: 'row', gap: spacing.md },
   bulletIcon: { fontSize: 24 },
-  bulletTitle: { ...typo.body, color: colors.text, fontWeight: '600' },
-  bulletBody: { ...typo.small, color: colors.textMuted, marginTop: 2, lineHeight: 20 },
+  bulletTitle: { ...typo.body, color: c.text, fontWeight: '600' },
+  bulletBody: { ...typo.small, color: c.textMuted, marginTop: 2, lineHeight: 20 },
 
   warn: {
     marginTop: spacing.lg,
@@ -119,16 +121,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.grace,
+    borderLeftColor: c.grace,
   },
   warnText: { ...typo.small, color: '#FDE68A', lineHeight: 20 },
-  warnLink: { ...typo.small, color: colors.grace, fontWeight: '700', marginTop: spacing.sm },
+  warnLink: { ...typo.small, color: c.grace, fontWeight: '700', marginTop: spacing.sm },
 
   footer: { padding: spacing.lg, gap: spacing.md },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: colors.brand,
+    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
-  skip: { ...typo.small, color: colors.textFaint, textAlign: 'center' },
+  skip: { ...typo.small, color: c.textFaint, textAlign: 'center' },
 });

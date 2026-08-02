@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { emergencyContactInput } from '@sentinela/shared';
 
 import { supabase } from '../../src/services/supabase';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 const CHANNELS = [
   { id: 'email', label: 'E-mail' },
@@ -17,6 +17,8 @@ const CHANNELS = [
 type Channel = (typeof CHANNELS)[number]['id'];
 
 export default function NovoContato() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const router = useRouter();
 
   const [fullName, setFullName] = useState('');
@@ -91,7 +93,7 @@ export default function NovoContato() {
           value={fullName}
           onChangeText={setFullName}
           placeholder="Ana Souza"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           autoCapitalize="words"
           maxLength={120}
         />
@@ -103,7 +105,7 @@ export default function NovoContato() {
           value={relationship}
           onChangeText={setRelationship}
           placeholder="Mãe, irmão, amiga…"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           maxLength={60}
         />
       </Field>
@@ -114,7 +116,7 @@ export default function NovoContato() {
           value={email}
           onChangeText={setEmail}
           placeholder="ana@email.com"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           autoCapitalize="none"
           keyboardType="email-address"
           inputMode="email"
@@ -131,7 +133,7 @@ export default function NovoContato() {
           value={phone}
           onChangeText={setPhone}
           placeholder="+5511999999999"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           keyboardType="phone-pad"
           autoCapitalize="none"
         />
@@ -206,6 +208,7 @@ export default function NovoContato() {
 function Field({
   label, hint, error, children,
 }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
+  const styles = useStyles(criarEstilos);
   return (
     <View style={{ marginBottom: spacing.md }}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -219,74 +222,74 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
-  fieldLabel: { ...typo.caption, color: colors.textMuted, marginBottom: spacing.xs, letterSpacing: 0.6 },
+  fieldLabel: { ...typo.caption, color: c.textMuted, marginBottom: spacing.xs, letterSpacing: 0.6 },
   input: {
     height: 52,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
-    color: colors.text,
+    color: c.text,
     fontSize: 16,
   },
-  hint: { ...typo.caption, color: colors.textFaint, marginTop: spacing.xs, lineHeight: 16 },
-  error: { ...typo.caption, color: colors.alert, marginTop: spacing.xs },
+  hint: { ...typo.caption, color: c.textFaint, marginTop: spacing.xs, lineHeight: 16 },
+  error: { ...typo.caption, color: c.alert, marginTop: spacing.xs },
 
   sectionLabel: {
-    ...typo.caption, color: colors.textFaint, letterSpacing: 1.2,
+    ...typo.caption, color: c.textFaint, letterSpacing: 1.2,
     marginTop: spacing.md, marginBottom: spacing.sm,
   },
 
   segmented: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: 4,
     gap: 4,
   },
   segment: { flex: 1, height: 42, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  segmentActive: { backgroundColor: colors.brand },
-  segmentLabel: { ...typo.small, color: colors.textMuted, fontWeight: '600' },
+  segmentActive: { backgroundColor: c.brand },
+  segmentLabel: { ...typo.small, color: c.textMuted, fontWeight: '600' },
   segmentLabelActive: { color: '#fff' },
 
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepperBtn: {
     width: 52, height: 52,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperSign: { fontSize: 24, color: colors.text, lineHeight: 28 },
+  stepperSign: { fontSize: 24, color: c.text, lineHeight: 28 },
   stepperValue: { flex: 1, alignItems: 'center' },
-  stepperNumber: { ...typo.h1, color: colors.text },
-  stepperHint: { ...typo.caption, color: colors.textFaint },
+  stepperNumber: { ...typo.h1, color: c.text },
+  stepperHint: { ...typo.caption, color: c.textFaint },
 
   notice: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.brandLight,
+    borderLeftColor: c.brandLight,
   },
-  noticeTitle: { ...typo.small, color: colors.text, fontWeight: '700' },
-  noticeText: { ...typo.caption, color: colors.textMuted, marginTop: 4, lineHeight: 18 },
+  noticeTitle: { ...typo.small, color: c.text, fontWeight: '700' },
+  noticeText: { ...typo.caption, color: c.textMuted, marginTop: 4, lineHeight: 18 },
 
   primary: {
     height: 56,
     marginTop: spacing.xl,
     borderRadius: radius.md,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },

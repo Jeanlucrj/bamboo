@@ -74,3 +74,19 @@ export function useTheme(): ThemeCtx {
 export function useColors(): Palette {
   return useTheme().colors;
 }
+
+/**
+ * Folha de estilo que acompanha o tema.
+ *
+ * `StyleSheet.create` no topo do módulo congela as cores no primeiro import —
+ * é por isso que metade do app nascia preso ao escuro. Passando por aqui, a
+ * folha é recriada quando a paleta muda e só quando ela muda.
+ *
+ *     const styles = useStyles((c) => StyleSheet.create({
+ *       tela: { backgroundColor: c.bg },
+ *     }));
+ */
+export function useStyles<T>(fabrica: (c: Palette) => T): T {
+  const { colors } = useTheme();
+  return useMemo(() => fabrica(colors), [colors]);
+}

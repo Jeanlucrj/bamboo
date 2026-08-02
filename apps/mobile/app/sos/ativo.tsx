@@ -254,6 +254,16 @@ export default function SosAtivo() {
   );
 }
 
+/**
+ * Esta tela NÃO acompanha o tema, de propósito.
+ *
+ * O vermelho escuro em tela cheia é o sinal de que algo grave está em curso.
+ * Trocar para fundo claro porque o usuário prefere modo claro tiraria
+ * justamente o que faz a tela ser reconhecida num relance — e ela é usada por
+ * alguém em pânico, que não vai ler hierarquia visual sutil.
+ *
+ * É a única exceção à migração de tema no app.
+ */
 const styles = StyleSheet.create({
   // Vermelho escuro em tela cheia: quem está usando esta tela não vai ler
   // hierarquia visual sutil. Tudo grande, contraste alto, poucos elementos.

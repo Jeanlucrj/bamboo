@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Pressable, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, radius, type as typo } from '../theme';
+import { radius, type as typo, useStyles, type Palette } from '../theme';
 
 export function CheckinButton({ onPress }: { onPress: () => Promise<void> }) {
+  const styles = useStyles(criarEstilos);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -40,14 +41,14 @@ export function CheckinButton({ onPress }: { onPress: () => Promise<void> }) {
   );
 }
 
-const styles = StyleSheet.create({
+const criarEstilos = (c: Palette) => StyleSheet.create({
   button: {
     height: 88,
     borderRadius: radius.lg,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  done: { backgroundColor: colors.safe },
+  done: { backgroundColor: c.safe },
   label: { ...typo.h1, color: '#fff' },
 });

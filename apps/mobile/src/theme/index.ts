@@ -1,4 +1,4 @@
-export { ThemeProvider, useTheme, useColors, type ThemePref } from './ThemeProvider';
+export { ThemeProvider, useTheme, useColors, useStyles, type ThemePref } from './ThemeProvider';
 export { PALETTES, DARK, LIGHT, type Palette, type ThemeName } from './palettes';
 
 /**

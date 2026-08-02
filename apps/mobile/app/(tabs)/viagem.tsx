@@ -8,10 +8,12 @@ import {
   stopBackgroundTracking,
   isTrackingActive,
 } from '../../src/services/location/backgroundLocation';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 /** Sessão de Viagem — regras do alarme. */
 export default function ViagemScreen() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const { session, load } = useSessionStore();
   const [tracking, setTracking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -145,6 +147,8 @@ export default function ViagemScreen() {
 function Row({
   title, subtitle, value, onChange,
 }: { title: string; subtitle: string; value: boolean; onChange: (v: boolean) => void }) {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   return (
     <View style={styles.row}>
       <View style={{ flex: 1, paddingRight: spacing.md }}>
@@ -154,7 +158,7 @@ function Row({
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: colors.brand, false: colors.surfaceAlt }}
+        trackColor={{ true: c.brand, false: c.surfaceAlt }}
         thumbColor="#fff"
       />
     </View>
@@ -168,49 +172,49 @@ function parseIntervalHours(interval: string): number {
   return (days ? Number(days[1]) * 24 : 0) + (time ? Number(time[1]) : 0);
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  h1: { ...typo.h1, color: colors.text, marginBottom: spacing.lg },
-  muted: { ...typo.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+  h1: { ...typo.h1, color: c.text, marginBottom: spacing.lg },
+  muted: { ...typo.body, color: c.textMuted, textAlign: 'center', marginTop: 80 },
 
   sectionLabel: {
-    ...typo.caption, color: colors.textFaint, letterSpacing: 1.2,
+    ...typo.caption, color: c.textFaint, letterSpacing: 1.2,
     marginTop: spacing.lg, marginBottom: spacing.sm,
   },
   presets: { gap: spacing.sm },
   preset: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.md,
   },
-  presetActive: { borderColor: colors.brandLight, backgroundColor: colors.surfaceAlt },
-  presetLabel: { ...typo.h2, color: colors.textMuted },
-  presetLabelActive: { color: colors.text },
-  presetHint: { ...typo.caption, color: colors.textFaint, marginTop: 2 },
+  presetActive: { borderColor: c.brandLight, backgroundColor: c.surfaceAlt },
+  presetLabel: { ...typo.h2, color: c.textMuted },
+  presetLabelActive: { color: c.text },
+  presetHint: { ...typo.caption, color: c.textFaint, marginTop: 2 },
 
   summary: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.brandLight,
+    borderLeftColor: c.brandLight,
   },
-  summaryText: { ...typo.small, color: colors.text, lineHeight: 22 },
-  bold: { fontWeight: '700', color: colors.brandLight },
+  summaryText: { ...typo.small, color: c.text, lineHeight: 22 },
+  bold: { fontWeight: '700', color: c.brandLight },
 
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  rowTitle: { ...typo.body, color: colors.text, fontWeight: '600' },
-  rowSub: { ...typo.caption, color: colors.textMuted, marginTop: 2, lineHeight: 17 },
+  rowTitle: { ...typo.body, color: c.text, fontWeight: '600' },
+  rowSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 17 },
 
   notice: {
     marginTop: spacing.lg,
@@ -218,10 +222,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.grace,
+    borderLeftColor: c.grace,
   },
   noticeTitle: { ...typo.small, color: '#FDE68A', fontWeight: '700' },
   noticeText: { ...typo.caption, color: '#FDE68A', marginTop: 4, lineHeight: 18 },
 
-  footnote: { ...typo.caption, color: colors.textFaint, marginTop: spacing.lg, lineHeight: 18 },
+  footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.lg, lineHeight: 18 },
 });

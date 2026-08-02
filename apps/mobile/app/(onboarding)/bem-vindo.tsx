@@ -1,9 +1,10 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, type Palette } from '../../src/theme';
 
 export default function BemVindo() {
+  const styles = useStyles(criarEstilos);
   const router = useRouter();
 
   return (
@@ -42,6 +43,7 @@ export default function BemVindo() {
 }
 
 function Step({ n, title, body }: { n: string; title: string; body: string }) {
+  const styles = useStyles(criarEstilos);
   return (
     <View style={styles.step}>
       <View style={styles.stepBadge}>
@@ -55,27 +57,27 @@ function Step({ n, title, body }: { n: string; title: string; body: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.lg },
-  logo: { ...typo.caption, color: colors.brandLight, letterSpacing: 4, textAlign: 'center' },
+  logo: { ...typo.caption, color: c.brandLight, letterSpacing: 4, textAlign: 'center' },
   headline: {
-    ...typo.h1, fontSize: 30, color: colors.text, textAlign: 'center',
+    ...typo.h1, fontSize: 30, color: c.text, textAlign: 'center',
     marginTop: spacing.xl, lineHeight: 40,
   },
-  sub: { ...typo.h2, color: colors.brandLight, textAlign: 'center', marginTop: spacing.xs },
+  sub: { ...typo.h2, color: c.brandLight, textAlign: 'center', marginTop: spacing.xs },
   steps: { marginTop: spacing.xxl, gap: spacing.lg },
   step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   stepBadge: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: colors.surfaceAlt,
+    width: 30, height: 30, borderRadius: 15, backgroundColor: c.surfaceAlt,
     alignItems: 'center', justifyContent: 'center',
   },
-  stepNum: { ...typo.small, color: colors.brandLight, fontWeight: '700' },
-  stepTitle: { ...typo.body, color: colors.text, fontWeight: '600' },
-  stepBody: { ...typo.small, color: colors.textMuted, marginTop: 2, lineHeight: 20 },
+  stepNum: { ...typo.small, color: c.brandLight, fontWeight: '700' },
+  stepTitle: { ...typo.body, color: c.text, fontWeight: '600' },
+  stepBody: { ...typo.small, color: c.textMuted, marginTop: 2, lineHeight: 20 },
   footer: { padding: spacing.lg },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: colors.brand,
+    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },

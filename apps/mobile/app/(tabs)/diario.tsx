@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatCard } from '../../src/components/StatCard';
 import { useTravelStats, useCountryVisits } from '../../src/hooks/useTravelStats';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 /**
  * Travel Analytics — o Diário de Bordo.
@@ -13,13 +13,15 @@ import { colors, spacing, radius, type as typo } from '../../src/theme';
  * sobre o histórico de GPS e atualizada de hora em hora pelo cron.
  */
 export default function DiarioScreen() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const { stats, loading } = useTravelStats();
   const { visits, loading: loadingVisits } = useCountryVisits();
 
   if (loading) {
     return (
       <SafeAreaView style={styles.screen}>
-        <ActivityIndicator style={{ marginTop: 80 }} color={colors.brandLight} />
+        <ActivityIndicator style={{ marginTop: 80 }} color={c.brandLight} />
       </SafeAreaView>
     );
   }
@@ -98,14 +100,14 @@ export default function DiarioScreen() {
                 value={s.passive_checkins}
                 label="check-ins passivos"
                 hint="sem você fazer nada"
-                accent={colors.safe}
+                accent={c.safe}
               />
               <StatCard value={s.trips_completed} label="viagens concluídas" />
             </View>
 
             <Text style={styles.sectionTitle}>Timeline</Text>
             {loadingVisits ? (
-              <ActivityIndicator color={colors.brandLight} />
+              <ActivityIndicator color={c.brandLight} />
             ) : (
               visits.slice(0, 30).map((v, i) => (
                 <View key={`${v.country_code}-${v.entered_at}-${i}`} style={styles.timelineRow}>
@@ -146,42 +148,42 @@ function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' });
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
-  title: { ...typo.h1, color: colors.text },
-  subtitle: { ...typo.small, color: colors.textMuted, marginBottom: spacing.md },
+  title: { ...typo.h1, color: c.text },
+  subtitle: { ...typo.small, color: c.textMuted, marginBottom: spacing.md },
 
   empty: { padding: spacing.xl, alignItems: 'center' },
-  emptyText: { ...typo.body, color: colors.textFaint, textAlign: 'center', lineHeight: 24 },
+  emptyText: { ...typo.body, color: c.textFaint, textAlign: 'center', lineHeight: 24 },
 
   mapPlaceholder: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.lg,
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  mapCount: { fontSize: 56, fontWeight: '800', color: colors.brandLight },
-  mapLabel: { ...typo.small, color: colors.textMuted },
+  mapCount: { fontSize: 56, fontWeight: '800', color: c.brandLight },
+  mapLabel: { ...typo.small, color: c.textMuted },
   mapFlags: { fontSize: 22, marginTop: spacing.md, textAlign: 'center', lineHeight: 32 },
 
   grid: { flexDirection: 'row', gap: spacing.sm },
 
-  sectionTitle: { ...typo.h2, color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm },
+  sectionTitle: { ...typo.h2, color: c.text, marginTop: spacing.lg, marginBottom: spacing.sm },
   timelineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   timelineFlag: { fontSize: 28 },
-  timelineCountry: { ...typo.body, color: colors.text, fontWeight: '600' },
-  timelineDates: { ...typo.caption, color: colors.textFaint },
+  timelineCountry: { ...typo.body, color: c.text, fontWeight: '600' },
+  timelineDates: { ...typo.caption, color: c.textFaint },
 
-  footnote: { ...typo.caption, color: colors.textFaint, marginTop: spacing.lg, textAlign: 'center' },
+  footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.lg, textAlign: 'center' },
 });

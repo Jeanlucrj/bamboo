@@ -8,11 +8,13 @@ import { CHECKIN_PRESETS, travelSessionInput } from '@sentinela/shared';
 import { supabase } from '../../src/services/supabase';
 import { useSessionStore } from '../../src/stores/session';
 import { startBackgroundTracking } from '../../src/services/location/backgroundLocation';
-import { colors, spacing, radius, type as typo } from '../../src/theme';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 const DEFAULT_HOURS = 24;
 
 export default function NovaViagem() {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   const router = useRouter();
   const { session: active, load } = useSessionStore();
 
@@ -148,7 +150,7 @@ export default function NovaViagem() {
           value={title}
           onChangeText={setTitle}
           placeholder="Sudeste asiático, trilha na Chapada…"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           maxLength={120}
         />
       </Field>
@@ -159,7 +161,7 @@ export default function NovaViagem() {
           value={destination}
           onChangeText={setDestination}
           placeholder="Vietnã e Camboja"
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={c.textFaint}
           maxLength={160}
         />
       </Field>
@@ -237,6 +239,7 @@ export default function NovaViagem() {
 function Field({
   label, error, children,
 }: { label: string; error?: string; children: React.ReactNode }) {
+  const styles = useStyles(criarEstilos);
   return (
     <View style={{ marginBottom: spacing.md }}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -249,6 +252,8 @@ function Field({
 function Row({
   title, subtitle, value, onChange,
 }: { title: string; subtitle: string; value: boolean; onChange: (v: boolean) => void }) {
+  const c = useColors();
+  const styles = useStyles(criarEstilos);
   return (
     <View style={styles.row}>
       <View style={{ flex: 1, paddingRight: spacing.md }}>
@@ -258,67 +263,67 @@ function Row({
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: colors.brand, false: colors.surfaceAlt }}
+        trackColor={{ true: c.brand, false: c.surfaceAlt }}
         thumbColor="#fff"
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+const criarEstilos = (c: Palette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
-  fieldLabel: { ...typo.caption, color: colors.textMuted, marginBottom: spacing.xs, letterSpacing: 0.6 },
+  fieldLabel: { ...typo.caption, color: c.textMuted, marginBottom: spacing.xs, letterSpacing: 0.6 },
   input: {
     height: 52,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
-    color: colors.text,
+    color: c.text,
     fontSize: 16,
   },
-  error: { ...typo.caption, color: colors.alert, marginTop: spacing.xs },
+  error: { ...typo.caption, color: c.alert, marginTop: spacing.xs },
 
   sectionLabel: {
-    ...typo.caption, color: colors.textFaint, letterSpacing: 1.2,
+    ...typo.caption, color: c.textFaint, letterSpacing: 1.2,
     marginTop: spacing.md, marginBottom: spacing.sm,
   },
   presets: { gap: spacing.sm },
   preset: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.md,
   },
-  presetActive: { borderColor: colors.brandLight, backgroundColor: colors.surfaceAlt },
-  presetLabel: { ...typo.h2, color: colors.textMuted },
-  presetLabelActive: { color: colors.text },
-  presetHint: { ...typo.caption, color: colors.textFaint, marginTop: 2 },
+  presetActive: { borderColor: c.brandLight, backgroundColor: c.surfaceAlt },
+  presetLabel: { ...typo.h2, color: c.textMuted },
+  presetLabelActive: { color: c.text },
+  presetHint: { ...typo.caption, color: c.textFaint, marginTop: 2 },
 
   summary: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.brandLight,
+    borderLeftColor: c.brandLight,
   },
-  summaryText: { ...typo.small, color: colors.text, lineHeight: 22 },
-  bold: { fontWeight: '700', color: colors.brandLight },
+  summaryText: { ...typo.small, color: c.text, lineHeight: 22 },
+  bold: { fontWeight: '700', color: c.brandLight },
 
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  rowTitle: { ...typo.body, color: colors.text, fontWeight: '600' },
-  rowSub: { ...typo.caption, color: colors.textMuted, marginTop: 2, lineHeight: 17 },
+  rowTitle: { ...typo.body, color: c.text, fontWeight: '600' },
+  rowSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 17 },
 
   notice: {
     marginTop: spacing.md,
@@ -326,7 +331,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.grace,
+    borderLeftColor: c.grace,
   },
   noticeTitle: { ...typo.small, color: '#FDE68A', fontWeight: '700' },
   noticeText: { ...typo.caption, color: '#FDE68A', marginTop: 4, lineHeight: 18 },
@@ -335,21 +340,21 @@ const styles = StyleSheet.create({
     height: 56,
     marginTop: spacing.xl,
     borderRadius: radius.md,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
   link: {
-    ...typo.body, color: colors.brandLight, fontWeight: '600',
+    ...typo.body, color: c.brandLight, fontWeight: '600',
     textAlign: 'center', marginTop: spacing.lg,
   },
-  footnote: { ...typo.caption, color: colors.textFaint, marginTop: spacing.md, lineHeight: 18 },
+  footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.md, lineHeight: 18 },
 
   blocker: { flex: 1, justifyContent: 'center', padding: spacing.xl },
-  blockerTitle: { ...typo.h1, color: colors.text, textAlign: 'center' },
+  blockerTitle: { ...typo.h1, color: c.text, textAlign: 'center' },
   blockerBody: {
-    ...typo.body, color: colors.textMuted, textAlign: 'center',
+    ...typo.body, color: c.textMuted, textAlign: 'center',
     marginTop: spacing.md, lineHeight: 24,
   },
 });

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, Text, View, StyleSheet, Animated, Easing } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, radius, type as typo } from '../theme';
+import { radius, type as typo, useStyles, type Palette } from '../theme';
 
 const HOLD_MS = 3000;
 
@@ -14,6 +14,7 @@ const HOLD_MS = 3000;
  * a chance de soltar antes de disparar.
  */
 export function PanicButton({ onTrigger }: { onTrigger: () => void }) {
+  const styles = useStyles(criarEstilos);
   const [holding, setHolding] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,18 +75,18 @@ export function PanicButton({ onTrigger }: { onTrigger: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const criarEstilos = (c: Palette) => StyleSheet.create({
   wrapper: { width: '100%' },
   button: {
     height: 76,
     borderRadius: radius.lg,
     backgroundColor: '#3F1416',
     borderWidth: 1.5,
-    borderColor: colors.alert,
+    borderColor: c.alert,
     overflow: 'hidden',
     justifyContent: 'center',
   },
-  fill: { ...StyleSheet.absoluteFillObject, right: undefined, backgroundColor: colors.alert },
+  fill: { ...StyleSheet.absoluteFillObject, right: undefined, backgroundColor: c.alert },
   content: { alignItems: 'center' },
   title: { ...typo.h1, color: '#fff', letterSpacing: 4 },
   subtitle: { ...typo.caption, color: '#FCA5A5', marginTop: 2 },
