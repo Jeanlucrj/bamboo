@@ -3,19 +3,22 @@
     "name": "Sentinela",
     "slug": "bamboo",
     "scheme": "sentinela",
-
     "owner": "jeanlucmavericks-team",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "backgroundColor": "#0B1120",
-
+    "backgroundColor": "#070B14",
+    "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.sentinela.app",
       "supportsTablet": false,
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch", "remote-notification"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ],
         "NSLocationWhenInUseUsageDescription": "Usamos sua localização para registrar seu diário de viagem e saber seu último ponto conhecido.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Para acionar seus contatos de emergência com sua última localização caso você pare de dar sinal de vida, precisamos acessar sua localização mesmo com o app fechado.",
         "NSLocationAlwaysUsageDescription": "Para acionar seus contatos de emergência caso você pare de dar sinal de vida, mesmo com o app fechado.",
@@ -25,9 +28,12 @@
         "com.apple.developer.usernotifications.critical-alerts": true
       }
     },
-
     "android": {
       "package": "com.sentinela.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#070B14"
+      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -40,7 +46,6 @@
         "POST_NOTIFICATIONS"
       ]
     },
-
     "plugins": [
       "expo-router",
       [
@@ -62,9 +67,17 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#070B14"
+        }
+      ]
     ],
-
     "extra": {
       "eas": {
         "projectId": "93a1491f-71f3-4f2d-bdc2-49d608f46f06"

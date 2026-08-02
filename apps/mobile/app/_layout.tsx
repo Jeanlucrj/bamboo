@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AppState, View, ActivityIndicator, Platform, Alert } from 'react-native';
+import { AppState, Platform, Alert } from 'react-native';
 import * as Linking from 'expo-linking';
+import * as SplashScreen from 'expo-splash-screen';
 import type { Session } from '@supabase/supabase-js';
+
+// Segura a splash NATIVA até nós mandarmos escondê-la. Sem isto o SO a remove
+// assim que o JS carrega e aparece um flash do fundo entre ela e a nossa
+// abertura animada. Fora do componente de propósito: precisa valer antes de
+// qualquer render.
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* já escondida — acontece no fast refresh e é inofensivo */
+});
 
 // ⚠️ IMPORT OBRIGATÓRIO, mesmo sem uso aparente neste arquivo.
 // TaskManager.defineTask precisa executar durante o import do módulo. Quando o
@@ -16,6 +25,7 @@ import { flushQueue } from '../src/services/location/pingQueue';
 import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
+import { Abertura } from '../src/components/Abertura';
 import { useSessionStore } from '../src/stores/session';
 import { ThemeProvider, useColors, useTheme } from '../src/theme';
 
@@ -32,6 +42,7 @@ export default function RootLayout() {
 function RootNavigator() {
   const colors = useColors();
   const { scheme } = useTheme();
+  const [aberturaVisivel, setAberturaVisivel] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
@@ -130,13 +141,11 @@ function RootNavigator() {
     return () => sub.remove();
   }, [session]);
 
-  if (!ready) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={colors.brandLight} />
-      </View>
-    );
-  }
+  // A splash nativa sai assim que a nossa abertura já está montada por cima.
+  // Escondê-la antes deixaria um frame de fundo cru entre as duas.
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   return (
     <>
@@ -169,6 +178,14 @@ function RootNavigator() {
         <Stack.Screen name="perfil/assinatura" options={{ title: 'Assinatura' }} />
         <Stack.Screen name="perfil/aparencia" options={{ title: 'Aparência' }} />
       </Stack>
+
+      {/* Por cima de tudo até a sessão ser restaurada. `ready` vem do
+          getSession — enquanto ele não resolve, não sabemos se o usuário está
+          logado, e mostrar a árvore de navegação nesse intervalo causava o
+          pisca-pisca entre onboarding e abas. */}
+      {aberturaVisivel && (
+        <Abertura pronto={ready} onFim={() => setAberturaVisivel(false)} />
+      )}
     </>
   );
 }
