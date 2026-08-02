@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Easing, Image, StyleSheet } from 'react-native';
 
 /**
@@ -13,11 +13,26 @@ import { View, Text, Animated, Easing, Image, StyleSheet } from 'react-native';
  * Some sozinho quando `pronto` vira true. A saída é um fade curto com leve
  * escala: corte seco denuncia que eram duas telas diferentes.
  */
+/**
+ * Tempo mínimo em tela, independente de a sessão já estar pronta.
+ *
+ * Com a sessão em cache, `pronto` vira true em poucos milissegundos e a
+ * abertura passava tão rápido que nem dava para ver — o efeito era de um
+ * piscar, não de uma marca. 1900ms cobre quase um ciclo inteiro do pulso
+ * (1100ms por metade), que é o mínimo para a animação ser percebida como
+ * intencional.
+ *
+ * Não vá muito além disso: tela de abertura que segura o usuário é atrito, e
+ * neste app a primeira coisa que ele quer ver é se o alarme está armado.
+ */
+const MINIMO_MS = 1900;
+
 export function Abertura({ pronto, onFim }: { pronto: boolean; onFim: () => void }) {
   const pulso = useRef(new Animated.Value(0)).current;
   const giro = useRef(new Animated.Value(0)).current;
   const entrada = useRef(new Animated.Value(0)).current;
   const saida = useRef(new Animated.Value(1)).current;
+  const [tempoCumprido, setTempoCumprido] = useState(false);
 
   useEffect(() => {
     // Entrada: o anel cresce do 92% e o texto aparece logo atrás.
@@ -50,17 +65,22 @@ export function Abertura({ pronto, onFim }: { pronto: boolean; onFim: () => void
     ).start();
   }, []);
 
+  // Relógio do tempo mínimo, independente do carregamento.
   useEffect(() => {
-    if (!pronto) return;
-    // Um respiro antes de sair: sumir no instante exato em que fica pronto
-    // produz um piscar desagradável quando a restauração é rápida.
-    const t = setTimeout(() => {
-      Animated.timing(saida, {
-        toValue: 0, duration: 380, easing: Easing.in(Easing.cubic), useNativeDriver: true,
-      }).start(({ finished }) => finished && onFim());
-    }, 260);
+    const t = setTimeout(() => setTempoCumprido(true), MINIMO_MS);
     return () => clearTimeout(t);
-  }, [pronto]);
+  }, []);
+
+  // Só sai quando as DUAS condições valem: a sessão resolveu e o tempo mínimo
+  // passou. Assim a abertura nunca pisca em aparelho rápido, e nunca segura
+  // além do necessário em aparelho lento — nesse caso quem manda é o
+  // carregamento, que já terá passado do mínimo.
+  useEffect(() => {
+    if (!pronto || !tempoCumprido) return;
+    Animated.timing(saida, {
+      toValue: 0, duration: 420, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+    }).start(({ finished }) => finished && onFim());
+  }, [pronto, tempoCumprido]);
 
   const escalaHalo = pulso.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
   const opacidadeHalo = pulso.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.05] });
