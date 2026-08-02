@@ -68,6 +68,19 @@ additional_redirect_urls = [
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
+
+# Janela em que o refresh token antigo continua aceito depois de rotacionado.
+#
+# O padrão (10s) é curto demais para este app. Ele tem DOIS runtimes JS com
+# cliente Supabase: o da interface e o que o SO cria ao acordar a task de
+# localização em segundo plano. Se os dois renovarem com poucos segundos de
+# diferença, a rotação invalida o token do segundo e a sessão inteira cai — o
+# usuário volta para a tela de "enviar link" sem ter feito nada.
+#
+# 30s cobre a diferença de relógio entre eles sem abrir janela relevante: o
+# token só é reaproveitável nesse intervalo e apenas por quem já o possuía.
+refresh_token_reuse_interval = 30
+
 enable_signup = true
 
 # ---------------------------------------------------------------------
