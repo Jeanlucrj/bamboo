@@ -1,0 +1,119 @@
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, Animated, Easing, Pressable, StyleSheet } from 'react-native';
+import { pedirBiometria } from '../services/bloqueio';
+
+/**
+ * Tela de desbloqueio.
+ *
+ * Aparece quando existe sessão salva e o bloqueio biométrico está ligado. É o
+ * que substitui o link mágico na volta ao app: a sessão nunca foi destruída,
+ * só estava trancada.
+ *
+ * Tenta a biometria sozinha ao abrir — pedir um toque antes do prompt seria um
+ * passo a mais sem ganho. Se falhar ou for cancelada, oferece tentar de novo,
+ * porque cancelamento acidental é comum e ficar preso numa tela morta é pior
+ * que a pergunta repetida.
+ */
+export function TelaBloqueio({ onDesbloquear, onSair }: {
+  onDesbloquear: () => void;
+  onSair: () => void;
+}) {
+  const [tentando, setTentando] = useState(true);
+  const [falhou, setFalhou] = useState(false);
+  const pulso = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulso, { toValue: 1, duration: 1100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulso, { toValue: 0, duration: 1100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    ).start();
+  }, []);
+
+  async function tentar() {
+    setTentando(true);
+    setFalhou(false);
+    const ok = await pedirBiometria('Desbloqueie o Sentinela');
+    setTentando(false);
+    if (ok) onDesbloquear();
+    else setFalhou(true);
+  }
+
+  useEffect(() => {
+    tentar();
+  }, []);
+
+  const escala = pulso.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] });
+  const opacidade = pulso.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.05] });
+
+  return (
+    <View style={styles.tela}>
+      <View style={styles.centro}>
+        <Animated.View
+          style={[styles.halo, { transform: [{ scale: escala }], opacity: opacidade }]}
+        />
+        <Image source={require('../../assets/splash-icon.png')} style={styles.logo} />
+      </View>
+
+      <Text style={styles.titulo}>
+        {tentando ? 'Desbloqueando…' : falhou ? 'Não reconhecemos' : 'Sentinela bloqueado'}
+      </Text>
+      <Text style={styles.corpo}>
+        {falhou
+          ? 'Tente de novo, ou use o PIN do aparelho quando ele oferecer.'
+          : 'Sua sessão continua ativa. Confirme que é você para entrar.'}
+      </Text>
+
+      <View style={styles.acoes}>
+        <Pressable style={styles.primario} onPress={tentar} disabled={tentando}>
+          <Text style={styles.primarioLabel}>
+            {tentando ? 'Aguardando…' : 'Desbloquear'}
+          </Text>
+        </Pressable>
+
+        {/* Saída de emergência: sem isto, quem trocou de aparelho ou perdeu a
+            biometria fica preso numa tela sem alternativa. */}
+        <Pressable onPress={onSair} style={styles.secundario}>
+          <Text style={styles.secundarioLabel}>Entrar com outra conta</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const TAM = 108;
+
+const styles = StyleSheet.create({
+  tela: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#070B14',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    zIndex: 998,
+  },
+  centro: { width: TAM * 1.6, height: TAM * 1.6, alignItems: 'center', justifyContent: 'center' },
+  halo: {
+    position: 'absolute',
+    width: TAM * 1.4, height: TAM * 1.4, borderRadius: TAM,
+    backgroundColor: '#14B8A6',
+  },
+  logo: { width: TAM, height: TAM, resizeMode: 'contain' },
+  titulo: {
+    marginTop: 28, fontSize: 22, fontWeight: '800',
+    letterSpacing: -0.5, color: '#F1F5F9', textAlign: 'center',
+  },
+  corpo: {
+    marginTop: 10, fontSize: 14, lineHeight: 21,
+    color: '#94A3B8', textAlign: 'center', maxWidth: 300,
+  },
+  acoes: { marginTop: 36, width: '100%', maxWidth: 340, gap: 8 },
+  primario: {
+    height: 56, borderRadius: 20, backgroundColor: '#14B8A6',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  primarioLabel: { fontSize: 16, fontWeight: '800', color: '#05201D' },
+  secundario: { height: 48, alignItems: 'center', justifyContent: 'center' },
+  secundarioLabel: { fontSize: 14, fontWeight: '600', color: '#64748B' },
+});

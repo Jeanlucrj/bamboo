@@ -26,6 +26,9 @@ import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
 import { Abertura } from '../src/components/Abertura';
+import { TelaBloqueio } from '../src/components/TelaBloqueio';
+import { bloqueioAtivo } from '../src/services/bloqueio';
+import { stopBackgroundTracking } from '../src/services/location/backgroundLocation';
 import { useSessionStore } from '../src/stores/session';
 import { ThemeProvider, useColors, useTheme } from '../src/theme';
 
@@ -43,6 +46,7 @@ function RootNavigator() {
   const colors = useColors();
   const { scheme } = useTheme();
   const [aberturaVisivel, setAberturaVisivel] = useState(true);
+  const [trancado, setTrancado] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
@@ -56,6 +60,18 @@ function RootNavigator() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  /**
+   * Decide se a tela de desbloqueio entra.
+   *
+   * Só faz sentido quando JÁ existe sessão salva: sem sessão o caminho é o
+   * login normal, e pedir biometria antes dele não protegeria nada.
+   */
+  useEffect(() => {
+    if (!ready) return;
+    if (!session) { setTrancado(false); return; }
+    bloqueioAtivo().then(setTrancado);
+  }, [ready, session?.user?.id]);
 
   /**
    * Deep link do e-mail — é o que fecha o login.
@@ -177,12 +193,26 @@ function RootNavigator() {
         <Stack.Screen name="perfil/apagar" options={{ title: 'Apagar dados' }} />
         <Stack.Screen name="perfil/assinatura" options={{ title: 'Assinatura' }} />
         <Stack.Screen name="perfil/aparencia" options={{ title: 'Aparência' }} />
+        <Stack.Screen name="perfil/bloqueio" options={{ title: 'Bloqueio' }} />
       </Stack>
 
       {/* Por cima de tudo até a sessão ser restaurada. `ready` vem do
           getSession — enquanto ele não resolve, não sabemos se o usuário está
           logado, e mostrar a árvore de navegação nesse intervalo causava o
           pisca-pisca entre onboarding e abas. */}
+      {/* Abaixo da abertura na pilha: quando as duas existem, a abertura sai
+          primeiro e revela o bloqueio, sem piscar a árvore de navegação. */}
+      {trancado && !aberturaVisivel && (
+        <TelaBloqueio
+          onDesbloquear={() => setTrancado(false)}
+          onSair={async () => {
+            await stopBackgroundTracking().catch(() => {});
+            await supabase.auth.signOut();
+            setTrancado(false);
+          }}
+        />
+      )}
+
       {aberturaVisivel && (
         <Abertura pronto={ready} onFim={() => setAberturaVisivel(false)} />
       )}
