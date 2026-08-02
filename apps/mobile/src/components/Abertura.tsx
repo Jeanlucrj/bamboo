@@ -16,16 +16,22 @@ import { View, Text, Animated, Easing, Image, StyleSheet } from 'react-native';
 /**
  * Tempo mínimo em tela, independente de a sessão já estar pronta.
  *
- * Com a sessão em cache, `pronto` vira true em poucos milissegundos e a
- * abertura passava tão rápido que nem dava para ver — o efeito era de um
- * piscar, não de uma marca. 1900ms cobre quase um ciclo inteiro do pulso
- * (1100ms por metade), que é o mínimo para a animação ser percebida como
- * intencional.
+ * ESTE É O NÚMERO PARA MEXER se a abertura estiver curta ou longa demais.
  *
- * Não vá muito além disso: tela de abertura que segura o usuário é atrito, e
- * neste app a primeira coisa que ele quer ver é se o alarme está armado.
+ * Com a sessão em cache, `pronto` vira true em poucos milissegundos — sem
+ * este mínimo a abertura pisca e ninguém vê a animação.
+ *
+ * Os ciclos, para calibrar com critério em vez de chute:
+ *   pulso do halo   2200ms (1100 por metade)
+ *   arco em órbita  2600ms por volta
+ *
+ * 3600ms mostra uma volta completa do arco e mais de um pulso inteiro — é o
+ * ponto em que a animação se lê como intencional, não como espera.
+ *
+ * Acima de ~4s começa a incomodar em uso real: quem abre este app quer saber
+ * se o alarme está armado, e cada segundo de logo é um segundo sem resposta.
  */
-const MINIMO_MS = 1900;
+const MINIMO_MS = 3600;
 
 export function Abertura({ pronto, onFim }: { pronto: boolean; onFim: () => void }) {
   const pulso = useRef(new Animated.Value(0)).current;
