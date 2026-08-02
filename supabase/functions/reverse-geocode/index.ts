@@ -11,7 +11,7 @@
  * profiles.current_country. É isso que faz o Dossiê mostrar o 191 tailandês
  * em vez do 190 brasileiro quando a emergência acontece na Tailândia.
  */
-import { admin, assertServiceRole, json } from '../_shared/supabaseAdmin.ts';
+import { admin, assertServiceRole, json, HttpError } from '../_shared/supabaseAdmin.ts';
 
 const BATCH = 200;
 const MAPBOX = Deno.env.get('MAPBOX_SECRET_TOKEN');
@@ -76,8 +76,13 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, processed, countriesUpdated: countryByUser.size });
   } catch (e) {
+    // Respeitar o status do HttpError: `assertServiceRole` lança 401, e
+    // devolver 500 no lugar transformava "sem permissão" em "servidor
+    // quebrado" — o tipo de mascaramento que faz perder tempo procurando bug
+    // onde não há.
+    const status = e instanceof HttpError ? e.status : 500;
     console.error('[geocode]', e);
-    return json({ ok: false, error: String(e) }, 500);
+    return json({ ok: false, error: String(e) }, status);
   }
 });
 

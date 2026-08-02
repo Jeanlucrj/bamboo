@@ -9,7 +9,7 @@
  *   · o app entra em tracking de 30 em 30 segundos.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { admin, json } from '../_shared/supabaseAdmin.ts';
+import { admin, json, HttpError } from '../_shared/supabaseAdmin.ts';
 import { handlePreflight, corsHeaders } from '../_shared/cors.ts';
 import { sendEmail, sendSms } from '../_shared/notify.ts';
 import { dossierEmailHtml, dossierSmsText } from '../_shared/templates/dossierEmail.ts';
@@ -154,7 +154,10 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, alert_id: alertId, contacts_notified: notified }, 200, cors);
   } catch (e) {
+    // Status real do erro em vez de 500 fixo: uma falha de permissao devolvia
+    // "servidor quebrado", que manda quem depura procurar no lugar errado.
+    const status = e instanceof HttpError ? e.status : 500;
     console.error('[sos]', e);
-    return json({ ok: false, error: String(e) }, 500, cors);
+    return json({ ok: false, error: String(e) }, status, cors);
   }
 });

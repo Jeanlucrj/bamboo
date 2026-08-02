@@ -4,7 +4,7 @@
  * precisa acionar um contato adicional durante um incidente aberto.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { admin, json } from '../_shared/supabaseAdmin.ts';
+import { admin, json, HttpError } from '../_shared/supabaseAdmin.ts';
 import { handlePreflight, corsHeaders } from '../_shared/cors.ts';
 import { sendEmail, sendSms } from '../_shared/notify.ts';
 import { dossierEmailHtml, dossierSmsText } from '../_shared/templates/dossierEmail.ts';
@@ -110,7 +110,10 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, sent }, 200, cors);
   } catch (e) {
+    // Status real do erro em vez de 500 fixo: uma falha de permissao devolvia
+    // "servidor quebrado", que manda quem depura procurar no lugar errado.
+    const status = e instanceof HttpError ? e.status : 500;
     console.error('[send-dossier]', e);
-    return json({ ok: false, error: String(e) }, 500, cors);
+    return json({ ok: false, error: String(e) }, status, cors);
   }
 });

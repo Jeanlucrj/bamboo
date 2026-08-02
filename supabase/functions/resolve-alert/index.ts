@@ -6,7 +6,7 @@
  * própria — e o usuário desinstala o app no dia seguinte.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { admin, json } from '../_shared/supabaseAdmin.ts';
+import { admin, json, HttpError } from '../_shared/supabaseAdmin.ts';
 import { handlePreflight, corsHeaders } from '../_shared/cors.ts';
 import { sendEmail, sendSms } from '../_shared/notify.ts';
 
@@ -118,7 +118,10 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, contacts_notified: contactIds.length }, 200, cors);
   } catch (e) {
+    // Status real do erro em vez de 500 fixo: uma falha de permissao devolvia
+    // "servidor quebrado", que manda quem depura procurar no lugar errado.
+    const status = e instanceof HttpError ? e.status : 500;
     console.error('[resolve]', e);
-    return json({ ok: false, error: String(e) }, 500, cors);
+    return json({ ok: false, error: String(e) }, status, cors);
   }
 });
