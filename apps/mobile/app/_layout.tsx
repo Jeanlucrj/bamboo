@@ -17,9 +17,21 @@ import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
 import { useSessionStore } from '../src/stores/session';
-import { colors } from '../src/theme';
+import { ThemeProvider, useColors, useTheme } from '../src/theme';
 
 export default function RootLayout() {
+  // O provider precisa envolver TODA a árvore, inclusive o Stack — senão as
+  // telas montam antes do contexto existir e `useColors` estoura.
+  return (
+    <ThemeProvider>
+      <RootNavigator />
+    </ThemeProvider>
+  );
+}
+
+function RootNavigator() {
+  const colors = useColors();
+  const { scheme } = useTheme();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
@@ -128,7 +140,9 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      {/* Ícones da barra de status acompanham o tema: 'light' sobre fundo
+          claro deixa relógio e bateria invisíveis. */}
+      <StatusBar style={scheme === 'light' ? 'dark' : 'light'} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
@@ -144,6 +158,16 @@ export default function RootLayout() {
         />
         <Stack.Screen name="viagem/nova" options={{ title: 'Nova viagem', presentation: 'modal' }} />
         <Stack.Screen name="contatos/novo" options={{ title: 'Novo contato', presentation: 'modal' }} />
+
+        {/* Telas que já eram navegadas pelo Perfil e não existiam — tocar em
+            qualquer uma delas não levava a lugar nenhum. */}
+        <Stack.Screen name="contatos/index" options={{ title: 'Contatos de emergência' }} />
+        <Stack.Screen name="contatos/dossie" options={{ title: 'Dossiê médico' }} />
+        <Stack.Screen name="perfil/acessos" options={{ title: 'Acessos ao dossiê' }} />
+        <Stack.Screen name="perfil/exportar" options={{ title: 'Exportar meus dados' }} />
+        <Stack.Screen name="perfil/apagar" options={{ title: 'Apagar dados' }} />
+        <Stack.Screen name="perfil/assinatura" options={{ title: 'Assinatura' }} />
+        <Stack.Screen name="perfil/aparencia" options={{ title: 'Aparência' }} />
       </Stack>
     </>
   );
