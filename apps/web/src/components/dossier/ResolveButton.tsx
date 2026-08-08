@@ -41,7 +41,7 @@ export function ResolveButton({
     return (
       <button
         onClick={() => setConfirming(true)}
-        className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+        className="mt-4 w-full rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-emerald-500"
       >
         Está tudo bem — encerrar alerta
       </button>
@@ -55,23 +55,23 @@ export function ResolveButton({
         onChange={(e) => setNote(e.target.value)}
         placeholder={`Ex.: falei com ${travelerName} por telefone, ficou sem sinal na trilha.`}
         rows={3}
-        className="w-full rounded-lg border border-emerald-300 bg-white p-3 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-xl border border-emerald-800/70 bg-slate-950/60 p-3 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-emerald-600"
       />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setConfirming(false)}
           disabled={busy}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold"
+          className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/60"
         >
           Cancelar
         </button>
         <button
           onClick={resolve}
           disabled={busy}
-          className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60"
         >
           {busy ? 'Encerrando…' : 'Confirmar'}
         </button>

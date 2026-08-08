@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createAnonClient } from '@/lib/supabase/server';
-import type { DossierPayload } from '@sentinela/shared';
+import type { DossierPayload, SafetyState } from '@sentinela/shared';
 import { ResolveButton } from '@/components/dossier/ResolveButton';
+import { STATUS_TOKENS } from '@/lib/statusTokens';
 
 /**
  * DOSSIÊ DE EMERGÊNCIA — página pública, acessada por token assinado.
@@ -40,22 +41,46 @@ export default async function DossierPage({
   const isSos = d.alert.level === 'sos';
   const resolved = !!d.alert.resolved_at;
 
+  const token_ = STATUS_TOKENS[d.alert.level as SafetyState] ?? STATUS_TOKENS.alert;
+
   return (
-    <main className="min-h-screen bg-slate-50 pb-20 text-slate-900">
-      {/* Faixa de status: a primeira coisa que a pessoa lê. */}
-      <header className={resolved ? 'bg-emerald-600' : isSos ? 'bg-red-700' : 'bg-amber-600'}>
-        <div className="mx-auto max-w-2xl px-5 py-7 text-white">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-90">
+    <main className="ambient-bg min-h-screen pb-20 text-slate-100 antialiased">
+      {/* Marca. Esta página chega por link em WhatsApp ou e-mail, para alguém
+          que muitas vezes nem sabe que o Sentinela existe. Sem assinatura
+          visual ela parece phishing — e um link sem procedência conhecida,
+          pedindo para abrir dado médico de um parente, é exatamente o que as
+          pessoas foram treinadas a não clicar. */}
+      <div className="border-b border-slate-800/60 bg-[#070b14]/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3.5">
+          <span className="gradient-text text-sm font-extrabold tracking-[0.2em]">SENTINELA</span>
+          <span className="text-[11px] font-medium text-slate-500">Dossiê de Emergência</span>
+        </div>
+      </div>
+
+      {/* Faixa de status: a primeira coisa que a pessoa lê.
+          As cores vêm de STATUS_TOKENS, as mesmas do painel e do app — antes
+          eram bg-amber-600 / bg-red-700 escritas à mão aqui, então o mesmo
+          estado tinha uma cor na tela do viajante e outra na do contato. */}
+      <header
+        className="border-b"
+        style={{ backgroundColor: token_.surface, borderColor: token_.border }}
+      >
+        <div className="mx-auto max-w-2xl px-5 py-7">
+          <p
+            className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]"
+            style={{ color: token_.ink }}
+          >
+            <span aria-hidden>{token_.icon}</span>
             {resolved ? 'Alerta encerrado' : isSos ? 'Emergência acionada' : 'Alerta de segurança'}
           </p>
-          <h1 className="mt-2 text-2xl font-bold leading-tight">
+          <h1 className="mt-2.5 text-2xl font-bold leading-tight text-white sm:text-3xl">
             {resolved
               ? `${d.traveler.name} está bem`
               : isSos
                 ? `${d.traveler.name} acionou o botão de emergência`
                 : `${d.traveler.name} não dá sinal de vida`}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed opacity-95">{d.alert.reason}</p>
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">{d.alert.reason}</p>
         </div>
       </header>
 
@@ -86,7 +111,7 @@ export default async function DossierPage({
                   .filter(Boolean)
                   .join(', ') || 'Coordenadas registradas'}
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-400">
                 {fmt(d.last_known.recorded_at)}
                 {d.last_known.accuracy_m
                   ? ` · precisão de ~${Math.round(d.last_known.accuracy_m)} m`
@@ -98,7 +123,7 @@ export default async function DossierPage({
                   href={`https://www.google.com/maps?q=${d.last_known.lat},${d.last_known.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
+                  className="rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:from-teal-500 hover:to-teal-400"
                 >
                   Abrir no mapa
                 </a>
@@ -106,13 +131,13 @@ export default async function DossierPage({
                   href={`https://www.google.com/maps/dir/?api=1&destination=${d.last_known.lat},${d.last_known.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg border border-slate-300 px-4 py-3 text-center text-sm font-semibold"
+                  className="rounded-xl border border-slate-700 px-4 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800/60"
                 >
                   Traçar rota
                 </a>
               </div>
 
-              <p className="mt-3 font-mono text-xs text-slate-400">
+              <p className="mt-3 font-mono text-xs text-slate-500">
                 {d.last_known.lat.toFixed(5)}, {d.last_known.lng.toFixed(5)}
               </p>
             </>
@@ -141,7 +166,7 @@ export default async function DossierPage({
                 href={d.local_emergency.embassy_br_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 block text-sm font-semibold text-teal-700 underline"
+                className="mt-3 block rounded-xl border border-teal-800/70 bg-teal-950/40 px-4 py-3 text-sm font-semibold text-teal-300 transition hover:border-teal-600 hover:bg-teal-900/40"
               >
                 Consulado do Brasil em {d.local_emergency.country_name} →
               </a>
@@ -170,9 +195,9 @@ export default async function DossierPage({
             <ol className="space-y-3">
               {d.recent_track.slice(0, 20).map((p, i) => (
                 <li key={`${p.at}-${i}`} className="flex gap-3 text-sm">
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-teal-500" />
                   <div>
-                    <p className="font-medium">{p.city ?? 'Ponto registrado'}</p>
+                    <p className="font-medium text-slate-200">{p.city ?? 'Ponto registrado'}</p>
                     <p className="text-xs text-slate-500">{fmt(p.at)}</p>
                   </div>
                 </li>
@@ -183,31 +208,43 @@ export default async function DossierPage({
 
         {/* 5 · ENCERRAR — reduz o custo de falso positivo a um clique */}
         {!resolved && (
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-5">
-            <p className="text-sm font-semibold text-emerald-900">
+          <div className="rounded-2xl border border-emerald-800/70 bg-emerald-950/40 p-5">
+            <p className="text-sm font-semibold text-emerald-200">
               Já falou com {d.traveler.name} e está tudo bem?
             </p>
-            <p className="mt-1 text-sm text-emerald-800">
+            <p className="mt-1 text-sm text-emerald-300/80">
               Encerre o alerta. Todos os outros contatos serão avisados e este link será desativado.
             </p>
             <ResolveButton token={token} travelerName={d.traveler.name} />
           </div>
         )}
 
-        <p className="px-1 pt-2 text-xs leading-relaxed text-slate-400">
+        <p className="px-1 pt-2 text-xs leading-relaxed text-slate-500">
           Este link é pessoal e expira em {fmt(d.token_expires_at)}. Não encaminhe. Todos os
           acessos são registrados. Falta de sinal nem sempre significa emergência — pode ser apenas
           ausência de internet.
         </p>
+
+        {/* Rodapé com a marca: fecha a página com a mesma assinatura do topo e
+            diz de onde veio o e-mail/WhatsApp que trouxe a pessoa até aqui. */}
+        <footer className="border-t border-slate-800/60 pt-5 text-center">
+          <span className="gradient-text text-xs font-extrabold tracking-[0.2em]">SENTINELA</span>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-600">
+            Você recebeu este link porque {d.traveler.name} cadastrou você como contato de
+            emergência.
+          </p>
+        </footer>
       </div>
     </main>
   );
 }
 
+/** Mesma anatomia dos cartões do painel: raio grande, borda de 1px, superfície
+ *  levemente acima do fundo. */
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-black/20">
+      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
         {title}
       </h2>
       {children}
@@ -215,15 +252,20 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
+/**
+ * O número fica grande e branco porque é o elemento mais acionável da página:
+ * o rótulo é contexto, o número é o que a pessoa vai discar. Continua sendo um
+ * link `tel:` — no celular, um toque liga.
+ */
 function PhoneTile({ label, number }: { label: string; number: string | null }) {
   if (!number) return null;
   return (
     <a
       href={`tel:${number.replace(/\s/g, '')}`}
-      className="rounded-lg border border-slate-200 bg-slate-50 p-3 transition active:bg-slate-100"
+      className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 transition hover:border-teal-700 hover:bg-slate-900 active:bg-slate-800"
     >
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-lg font-bold text-slate-900">{number}</p>
+      <p className="text-lg font-bold tabular-nums text-white">{number}</p>
     </a>
   );
 }
@@ -235,7 +277,9 @@ function Field({
   return (
     <div>
       <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className={strong ? 'text-lg font-bold' : 'text-sm'}>{value}</dd>
+      <dd className={strong ? 'text-lg font-bold text-white' : 'text-sm text-slate-200'}>
+        {value}
+      </dd>
     </div>
   );
 }
