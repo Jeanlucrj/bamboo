@@ -84,6 +84,16 @@ export type OrgDeviceHealth = FnRow<'get_org_device_health'>;
  */
 export type TravelStats = FnRow<'get_my_travel_stats'>;
 
+/**
+ * Uma linha do histórico de viagens.
+ *
+ * `TravelStats` é o total do usuário desde sempre — 12 países, 8.400 km. Esta
+ * é a viagem individual: quando saiu, quando voltou, quanto andou, por onde
+ * passou. Sem ela o app tinha o número "viagens concluídas" e nenhuma forma de
+ * abrir e ver quais foram.
+ */
+export type TripHistoryItem = FnRow<'get_my_trip_history'>;
+
 // ---------------------------------------------------------------------
 // Retornos tabulares do painel de administração
 // ---------------------------------------------------------------------

@@ -232,6 +232,7 @@ function RootNavigator() {
           options={{ presentation: 'fullScreenModal', headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen name="viagem/nova" options={{ title: 'Nova viagem', presentation: 'modal' }} />
+        <Stack.Screen name="viagem/historico" options={{ title: 'Minhas viagens' }} />
         <Stack.Screen name="contatos/novo" options={{ title: 'Novo contato', presentation: 'modal' }} />
 
         {/* Telas que já eram navegadas pelo Perfil e não existiam — tocar em

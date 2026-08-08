@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import type { TravelStats } from '@sentinela/shared';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import type { TravelStats, TripHistoryItem } from '@sentinela/shared';
 import { supabase } from '../services/supabase';
 
 /**
@@ -32,6 +33,36 @@ export function useTravelStats() {
   }, []);
 
   return { stats, loading, error };
+}
+
+/**
+ * Histórico de viagens.
+ *
+ * Recarrega a cada foco da tela: voltar de "encerrar viagem" tem que refletir
+ * o status novo, e a lista é curta o bastante para não valer cache.
+ */
+export function useTripHistory() {
+  const [trips, setTrips] = useState<TripHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_my_trip_history');
+    if (error) setError(error.message);
+    else {
+      setError(null);
+      setTrips((data ?? []) as TripHistoryItem[]);
+    }
+    setLoading(false);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregar();
+    }, [carregar]),
+  );
+
+  return { trips, loading, error, recarregar: carregar };
 }
 
 export type CountryVisitItem = {

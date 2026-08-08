@@ -13,33 +13,62 @@
  */
 import { admin, assertServiceRole, json, HttpError } from '../_shared/supabaseAdmin.ts';
 
-const BATCH = 200;
+/**
+ * 200 era o lote, e ele nunca coube no tempo disponível.
+ *
+ * O Nominatim exige no máximo 1 requisição por segundo, então o laço dorme
+ * 1,1 s por ping: 200 pings = 220 segundos. O `invoke_edge` do cron corta em
+ * 25 s. Na prática a função era morta no meio, e como cada ping é gravado
+ * assim que resolve, o resultado ficava pela metade sem nada indicando isso.
+ *
+ * 15 cabe folgado em 25 s com latência de rede. Rodando de 10 em 10 minutos
+ * dá 90 pings/hora — muito acima do que um usuário gera (um ping a cada
+ * poucos minutos, e só quando se desloca).
+ *
+ * Com MAPBOX configurado não há sleep e o lote poderia ser bem maior; o teto
+ * continua conservador porque o caminho gratuito é o padrão do projeto.
+ */
+const BATCH = MAPBOX_ATIVO() ? 100 : 15;
+
+function MAPBOX_ATIVO() {
+  return Boolean(Deno.env.get('MAPBOX_SECRET_TOKEN'));
+}
+
 const MAPBOX = Deno.env.get('MAPBOX_SECRET_TOKEN');
+
+type Pendente = {
+  id: number;
+  user_id: string;
+  lat: number;
+  lng: number;
+  recorded_at: string;
+};
 
 Deno.serve(async (req) => {
   try {
     assertServiceRole(req);
     const db = admin();
 
-    const { data: pending, error } = await db
-      .from('location_logs')
-      .select('id, user_id, geom, recorded_at')
-      .is('country_code', null)
-      .order('recorded_at', { ascending: false })
-      .limit(BATCH);
+    // RPC, e não `.select('geom')`: o PostgREST devolve `geography` como EWKB
+    // em hexadecimal, e o parser de GeoJSON que existia aqui rejeitava 100%
+    // dos pings antes de consultar qualquer coisa. A função devolve lat/lng
+    // como números, que não dependem de configuração de serialização.
+    const { data: pending, error } = await db.rpc('pending_geocode', { p_limit: BATCH });
 
     if (error) throw new Error(error.message);
-    if (!pending?.length) return json({ ok: true, processed: 0 });
+    const fila = (pending ?? []) as Pendente[];
+    if (!fila.length) return json({ ok: true, processed: 0, countriesUpdated: 0 });
 
     let processed = 0;
+    let semResposta = 0;
     const countryByUser = new Map<string, { code: string; at: string }>();
 
-    for (const row of pending) {
-      const point = parseGeoJSONPoint(row.geom);
-      if (!point) continue;
-
-      const place = await lookup(point.lng, point.lat);
-      if (!place) continue;
+    for (const row of fila) {
+      const place = await lookup(row.lng, row.lat);
+      if (!place) {
+        semResposta++;
+        continue;
+      }
 
       await db
         .from('location_logs')
@@ -74,7 +103,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({ ok: true, processed, countriesUpdated: countryByUser.size });
+    // `semResposta` no retorno de propósito: com `processed: 0` sozinho não
+    // dava para distinguir "não havia nada a fazer" de "havia e tudo falhou".
+    // Foi exatamente essa ambiguidade que escondeu o bug do EWKB.
+    return json({
+      ok: true,
+      pendentes: fila.length,
+      processed,
+      semResposta,
+      countriesUpdated: countryByUser.size,
+    });
   } catch (e) {
     // Respeitar o status do HttpError: `assertServiceRole` lança 401, e
     // devolver 500 no lugar transformava "sem permissão" em "servidor
@@ -127,23 +165,22 @@ async function lookupNominatim(lng: number, lat: number): Promise<Place | null> 
     );
     if (!res.ok) return null;
     const d = await res.json();
-    const cc = d?.address?.country_code;
+    const a = d?.address ?? {};
+    const cc = a.country_code;
     if (!cc) return null;
+
     return {
       country_code: String(cc).toUpperCase().slice(0, 2),
-      region: d.address.state ?? null,
-      city: d.address.city ?? d.address.town ?? d.address.village ?? null,
+      region: a.state ?? null,
+      // `municipality` na lista, e não por capricho: o Nominatim classifica
+      // São José dos Campos — e boa parte das cidades brasileiras — como
+      // municipality, nunca como city. Sem ele a cidade voltava nula mesmo
+      // com a consulta respondendo certo, e o Diário mostrava "0 cidades"
+      // para quem tinha rodado o país inteiro.
+      city:
+        a.city ?? a.town ?? a.municipality ?? a.village ?? a.city_district ?? a.suburb ?? null,
     };
   } catch {
     return null;
   }
-}
-
-/** PostgREST devolve geography como GeoJSON ou WKB hex, dependendo da config. */
-function parseGeoJSONPoint(geom: unknown): { lng: number; lat: number } | null {
-  if (typeof geom === 'object' && geom !== null && 'coordinates' in geom) {
-    const c = (geom as { coordinates: [number, number] }).coordinates;
-    return { lng: c[0], lat: c[1] };
-  }
-  return null;
 }

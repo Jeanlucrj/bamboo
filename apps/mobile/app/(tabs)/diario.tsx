@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { StatCard } from '../../src/components/StatCard';
-import { useTravelStats, useCountryVisits } from '../../src/hooks/useTravelStats';
+import { useTravelStats, useCountryVisits, useTripHistory } from '../../src/hooks/useTravelStats';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 /**
@@ -15,8 +16,10 @@ import { spacing, radius, type as typo, useStyles, useColors, type Palette } fro
 export default function DiarioScreen() {
   const c = useColors();
   const styles = useStyles(criarEstilos);
+  const router = useRouter();
   const { stats, loading } = useTravelStats();
   const { visits, loading: loadingVisits } = useCountryVisits();
+  const { trips } = useTripHistory();
 
   if (loading) {
     return (
@@ -54,10 +57,31 @@ export default function DiarioScreen() {
           Escrito sozinho a partir do seu GPS e dos seus check-ins.
         </Text>
 
+        {/* Fora do `hasData`: as viagens existem independentemente de haver
+            ping de GPS. Antes, quem tivesse viajado com o rastreamento
+            desligado via só "seus números aparecem depois da primeira viagem"
+            — tendo feito várias. E não havia caminho nenhum, em tela alguma,
+            para a lista das viagens em si. */}
+        {trips.length > 0 ? (
+          <Pressable style={styles.linhaViagens} onPress={() => router.push('/viagem/historico')}>
+            <Text style={styles.linhaGlifo}>🧳</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.linhaTitulo}>Minhas viagens</Text>
+              <Text style={styles.linhaSub}>
+                {trips.length === 1 ? '1 viagem' : `${trips.length} viagens`} · datas, km, países e
+                cidades de cada uma
+              </Text>
+            </View>
+            <Text style={styles.linhaSeta}>›</Text>
+          </Pressable>
+        ) : null}
+
         {!hasData ? (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              Seus números aparecem aqui depois da primeira viagem monitorada.
+              {trips.length
+                ? 'Ainda não recebemos pontos de GPS suficientes para calcular países e quilômetros. Abra "Minhas viagens" acima para ver o que já existe.'
+                : 'Seus números aparecem aqui depois da primeira viagem monitorada.'}
             </Text>
           </View>
         ) : (
@@ -156,6 +180,22 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
 
   empty: { padding: spacing.xl, alignItems: 'center' },
   emptyText: { ...typo.body, color: c.textFaint, textAlign: 'center', lineHeight: 24 },
+
+  linhaViagens: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: c.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: c.border,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  linhaGlifo: { fontSize: 26 },
+  linhaTitulo: { ...typo.body, color: c.text, fontWeight: '700' },
+  linhaSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 16 },
+  linhaSeta: { fontSize: 22, color: c.textFaint },
 
   mapPlaceholder: {
     backgroundColor: c.surface,

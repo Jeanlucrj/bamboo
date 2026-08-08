@@ -84,6 +84,17 @@ export default function PerfilScreen() {
           />
         </Cartao>
 
+        <Rotulo>Histórico</Rotulo>
+        <Cartao>
+          <Linha
+            glifo="🧳" cor={c.brandLight}
+            label="Minhas viagens"
+            descricao="Datas, quilômetros, países e cidades de cada viagem"
+            onPress={() => router.push('/viagem/historico')}
+            ultima
+          />
+        </Cartao>
+
         <Rotulo>Privacidade</Rotulo>
         <Cartao>
           <Linha

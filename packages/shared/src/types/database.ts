@@ -1,16 +1,3 @@
-/**
- * Tipos do banco — ARQUIVO GERADO. Não edite à mão.
- *
- * Regenerar depois de aplicar migrations:
- *     pnpm dlx supabase@latest gen types typescript --linked > packages/shared/src/types/database.ts
- *
- * Gerado a partir do projeto mewxuybwxdznszkcpdcy em 2026-07-30.
- *
- * O que o gerador NÃO produz mora em `./app.ts`: o formato do `jsonb` de
- * `admin_overview()`, `admin_system_health()` e `get_dossier()` (aqui saem
- * como `Json`) e os apelidos curtos que o resto do código importa. Aquele
- * arquivo é manual e sobrevive à regeneração deste.
- */
 export type Json =
   | string
   | number
@@ -24,31 +11,6 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.15"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
   public: {
     Tables: {
@@ -1381,6 +1343,24 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_my_trip_history: {
+        Args: never
+        Returns: {
+          checkins: number
+          cities: string[]
+          countries: string[]
+          days: number
+          destination_label: string
+          ends_at: string
+          id: string
+          km: number
+          pings: number
+          starts_at: string
+          state: string
+          status: string
+          title: string
+        }[]
+      }
       get_org_device_health: {
         Args: { p_org: string }
         Returns: {
@@ -1426,6 +1406,16 @@ export type Database = {
           p_session_id: string
         }
         Returns: string
+      }
+      pending_geocode: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: number
+          lat: number
+          lng: number
+          recorded_at: string
+          user_id: string
+        }[]
       }
       record_signal: {
         Args: {
@@ -1653,9 +1643,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       contact_channel: ["email", "sms", "whatsapp", "push"],
