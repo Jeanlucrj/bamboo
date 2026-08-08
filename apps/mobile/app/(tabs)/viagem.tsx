@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert } from 'react-native';
+import {
+  View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert, ActivityIndicator,
+} from 'react-native';
 import { CHECKIN_PRESETS } from '@sentinela/shared';
 import { useSessionStore } from '../../src/stores/session';
 import { supabase } from '../../src/services/supabase';
@@ -17,6 +19,7 @@ export default function ViagemScreen() {
   const { session, load } = useSessionStore();
   const [tracking, setTracking] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [encerrando, setEncerrando] = useState(false);
 
   useEffect(() => {
     isTrackingActive().then(setTracking);
@@ -61,6 +64,39 @@ export default function ViagemScreen() {
       );
       setTracking(false);
     }
+  }
+
+  function encerrar() {
+    Alert.alert(
+      'Encerrar esta viagem?',
+      `“${session!.title}” sai do monitoramento. O cronômetro para, o GPS em segundo plano desliga e seus contatos deixam de ser acionados. A viagem vai para o histórico com tudo que você percorreu.`,
+      [
+        { text: 'Continuar viajando', style: 'cancel' },
+        {
+          text: 'Encerrar',
+          style: 'destructive',
+          onPress: async () => {
+            setEncerrando(true);
+            // A task de background para ANTES do update: deixá-la viva depois
+            // de encerrar faria o aparelho continuar enviando ping para uma
+            // sessão que não existe mais.
+            await stopBackgroundTracking().catch(() => {});
+
+            const { error } = await supabase
+              .from('travel_sessions')
+              .update({ status: 'completed', ends_at: new Date().toISOString() })
+              .eq('id', session!.id);
+
+            setEncerrando(false);
+            if (error) {
+              Alert.alert('Não foi possível encerrar', error.message);
+              return;
+            }
+            await load();
+          },
+        },
+      ],
+    );
   }
 
   async function togglePassive(value: boolean) {
@@ -134,6 +170,27 @@ export default function ViagemScreen() {
           telefone, faça o check-in manual antes de sair.
         </Text>
       </View>
+
+      {/* ENCERRAR — não existia em lugar nenhum do app.
+          O único caminho era tocar em "Nova viagem" e usar o botão que aparece
+          no aviso de "você já tem uma viagem ativa": encerrar escondido atrás
+          da ação que significa o oposto.
+          E não é detalhe de navegação. Uma viagem que não termina continua
+          cobrando check-in depois que a pessoa já voltou para casa — e o
+          alarme acaba acionando a família de quem está no sofã. Falso positivo
+          é o maior risco deste produto. */}
+      <Text style={styles.sectionLabel}>QUANDO VOCÊ VOLTAR</Text>
+      <Pressable style={styles.encerrar} disabled={encerrando} onPress={encerrar}>
+        {encerrando ? (
+          <ActivityIndicator color={c.alert} />
+        ) : (
+          <Text style={styles.encerrarLabel}>Encerrar viagem</Text>
+        )}
+      </Pressable>
+      <Text style={styles.footnote}>
+        Encerrar desliga o monitoramento e o rastreamento. Nada é apagado: a viagem passa para o
+        histórico com os quilômetros, países e cidades que você percorreu.
+      </Text>
 
       <Text style={styles.footnote}>
         O iOS não garante execução periódica em background. O intervalo de 4h é o alvo — na prática
@@ -228,4 +285,18 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   noticeText: { ...typo.caption, color: '#FDE68A', marginTop: 4, lineHeight: 18 },
 
   footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.lg, lineHeight: 18 },
+
+  // Contorno em vez de preenchido: encerrar é destrutivo, mas é também a ação
+  // NORMAL de quem voltou de viagem. Um botão vermelho sólido no fim da tela
+  // pareceria perigo e faria a pessoa hesitar — e viagem que ninguém encerra é
+  // alarme falso esperando para acontecer.
+  encerrar: {
+    height: 54,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: c.alert,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  encerrarLabel: { ...typo.body, color: c.alert, fontWeight: '700' },
 });

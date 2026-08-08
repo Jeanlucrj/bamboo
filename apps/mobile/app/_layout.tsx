@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, Alert } from 'react-native';
@@ -171,6 +171,68 @@ function RootNavigator() {
     })();
   }, [session?.user?.id]);
 
+  /**
+   * Abrir o app é sinal de vida: alguém destravou o telefone e entrou. É o que
+   * zera o cronômetro da Home.
+   *
+   * Extraído para uma função própria porque precisa rodar em DOIS momentos, e
+   * antes só rodava em um.
+   */
+  const ultimaAbertura = useRef<{ viagem: string; em: number } | null>(null);
+
+  const registrarAbertura = useCallback(async () => {
+    await flushQueue();
+
+    // Heartbeat do aparelho: é o que separa "app instalado" de "app vivo"
+    // no painel de admin.
+    registerDevice();
+
+    const ativa = useSessionStore.getState().session;
+    if (!ativa) return;
+
+    // Duas entradas quase simultâneas (o efeito de montagem e o AppState logo
+    // depois) gravariam dois `app_open` seguidos. O segundo não muda o
+    // cronômetro por causa do clamp temporal, mas suja o histórico de sinais.
+    const anterior = ultimaAbertura.current;
+    if (anterior?.viagem === ativa.id && Date.now() - anterior.em < 30_000) return;
+    ultimaAbertura.current = { viagem: ativa.id, em: Date.now() };
+
+    await supabase.rpc('record_signal', {
+      p_session_id: ativa.id,
+      p_kind: 'app_open',
+      p_source: Platform.OS,
+      p_device_id: (await getDeviceId()) ?? undefined,
+    });
+    await useSessionStore.getState().load();
+  }, []);
+
+  /**
+   * ABERTURA FRIA — o caso que faltava.
+   *
+   * `AppState.addEventListener('change', ...)` só dispara quando o estado MUDA.
+   * Numa abertura do zero — app fechado, celular reiniciado, app descarregado
+   * da memória — o estado já é 'active' quando o JS começa a rodar. Não há
+   * mudança, o evento nunca vem, e o `app_open` nunca era enviado.
+   *
+   * O sintoma era o cronômetro da Home não voltar "às vezes": voltando do
+   * segundo plano funcionava, abrindo do zero não. E "às vezes" só porque
+   * depende de o Android ter mantido o app em memória.
+   *
+   * Num Dead Man's Switch isso não é cosmético. `app_open` é uma das três
+   * provas de vida; se ele se perde justamente na abertura fria, o cronômetro
+   * segue correndo para quem está usando o app na frente da tela — e o alarme
+   * caminha para acionar a família de alguém que está bem.
+   *
+   * A chave inclui o id da viagem: sem sessão de viagem carregada não há o que
+   * registrar, e o efeito precisa esperar o `load()` terminar.
+   */
+  const viagemAtivaId = useSessionStore((s) => s.session?.id);
+
+  useEffect(() => {
+    if (!session || !viagemAtivaId) return;
+    registrarAbertura();
+  }, [session?.user?.id, viagemAtivaId, registrarAbertura]);
+
   // Voltar ao foreground vale como sinal de vida e é a hora certa de
   // esvaziar a fila offline — é quando há mais chance de ter rede.
   useEffect(() => {
@@ -184,28 +246,12 @@ function RootNavigator() {
       }
 
       await useBloqueioStore.getState().aoVoltar();
-
       if (!session) return;
 
-      await flushQueue();
-
-      // Heartbeat do aparelho: é o que separa "app instalado" de "app vivo"
-      // no painel de admin.
-      registerDevice();
-
-      const active = useSessionStore.getState().session;
-      if (active) {
-        await supabase.rpc('record_signal', {
-          p_session_id: active.id,
-          p_kind: 'app_open',
-          p_source: Platform.OS,
-          p_device_id: (await getDeviceId()) ?? undefined,
-        });
-        await useSessionStore.getState().load();
-      }
+      await registrarAbertura();
     });
     return () => sub.remove();
-  }, [session]);
+  }, [session, registrarAbertura]);
 
   // A splash nativa sai assim que a nossa abertura já está montada por cima.
   // Escondê-la antes deixaria um frame de fundo cru entre as duas.
