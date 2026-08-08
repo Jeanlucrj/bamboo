@@ -73,15 +73,9 @@ export default function Apagar() {
   return (
     <Tela>
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
-        <Rotulo>Apagar só o histórico de localização</Rotulo>
-        <Paragrafo>
-          Remove todos os pontos de GPS já registrados. Sua conta, contatos e dossiê continuam.
-          Os agregados do diário de bordo — países, quilômetros, cidades — permanecem, porque não
-          permitem reconstituir por onde você passou.
-        </Paragrafo>
-
-        <View style={{ height: spacing.md }} />
-        <Campo label="Digite APAGAR para confirmar">
+        {/* A trava fica no topo porque destranca as DUAS ações abaixo. Antes
+            ela morava dentro da primeira seção e valia só para ela. */}
+        <Campo label="Digite APAGAR para liberar os botões desta tela">
           <TextInput
             style={input}
             value={confirmacao}
@@ -92,6 +86,14 @@ export default function Apagar() {
           />
         </Campo>
 
+        <Rotulo>Apagar só o histórico de localização</Rotulo>
+        <Paragrafo>
+          Remove todos os pontos de GPS já registrados. Sua conta, contatos e dossiê continuam.
+          Os agregados do diário de bordo — países, quilômetros, cidades — permanecem, porque não
+          permitem reconstituir por onde você passou.
+        </Paragrafo>
+
+        <View style={{ height: spacing.md }} />
         <Botao
           label="Apagar histórico de localização"
           tom="perigo"
@@ -109,8 +111,24 @@ export default function Apagar() {
           que não pode existir dentro de um aplicativo.
         </Aviso>
 
+        {/* A confirmação digitada valia SÓ para o apagar-localização, que é o
+            menos grave dos dois. O "apagar tudo" — viagens, contatos e dossiê
+            médico, sem desfazer — saía com um toque e um Alert, que é o mesmo
+            gesto de dispensar uma notificação. A trava agora cobre os dois, e
+            este é o que mais precisava dela. */}
         <View style={{ height: spacing.md }} />
-        <Botao label="Apagar todos os meus dados" tom="perigo" onPress={apagarTudo} ocupado={apagando} />
+        <Botao
+          label="Apagar todos os meus dados"
+          tom="perigo"
+          onPress={apagarTudo}
+          ocupado={apagando}
+          desabilitado={!podeApagar}
+        />
+        {!podeApagar ? (
+          <View style={{ marginTop: spacing.sm }}>
+            <Paragrafo>Digite APAGAR no campo do topo para liberar os dois botões.</Paragrafo>
+          </View>
+        ) : null}
 
         <View style={{ height: spacing.lg }} />
         <Paragrafo>

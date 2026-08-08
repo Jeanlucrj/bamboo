@@ -99,11 +99,15 @@ export function ContatosPanel({ contatos }: { contatos: ContatoRow[] }) {
             <Field label="E-mail">
               <input name="email" type="email" placeholder="ana@email.com" className={input} />
             </Field>
+            {/* Espaço, parênteses e hífen são removidos no servidor antes da
+                validação. Pedir o número colado e chamar isso de "formato
+                internacional" fazia +55 11 97718-3338 ser recusado — que é
+                internacional e é como qualquer pessoa escreve. */}
             <Field
               label="Telefone"
-              hint="Formato internacional com código do país: +5511999999999"
+              hint="Com o código do país. Pode escrever com espaços: +55 11 97718-3338"
             >
-              <input name="phone" placeholder="+5511999999999" className={input} />
+              <input name="phone" placeholder="+55 11 97718-3338" className={input} />
             </Field>
           </div>
 

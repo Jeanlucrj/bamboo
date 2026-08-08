@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { requestTrackingPermissions } from '../../src/services/location/backgroundLocation';
 import { spacing, radius, type as typo, useStyles, type Palette } from '../../src/theme';
 
@@ -18,10 +18,26 @@ export default function PermissoesLocalizacao() {
   const router = useRouter();
   const [denied, setDenied] = useState<null | 'foreground' | 'background'>(null);
 
+  /**
+   * A mesma tela serve o onboarding e o atalho "Permissões de localização" do
+   * Perfil, e o destino depois de conceder não pode ser o mesmo nos dois.
+   *
+   * Vindo do Perfil, conceder empurrava o usuário para a tela de permissão de
+   * notificação e de lá para a Home — ele saía das configurações, atravessava
+   * um pedaço de onboarding que já tinha feito e perdia o lugar onde estava.
+   */
+  const { origem } = useLocalSearchParams<{ origem?: string }>();
+  const deAjustes = origem === 'ajustes';
+
+  function seguir() {
+    if (deAjustes) router.back();
+    else router.push('/(onboarding)/permissoes-notificacao');
+  }
+
   async function ask() {
     const res = await requestTrackingPermissions();
     if (res.granted) {
-      router.push('/(onboarding)/permissoes-notificacao');
+      seguir();
       return;
     }
     setDenied(res.reason === 'background_denied' ? 'background' : 'foreground');
@@ -80,8 +96,8 @@ export default function PermissoesLocalizacao() {
             {Platform.OS === 'ios' ? 'Permitir localização' : 'Ativar rastreamento'}
           </Text>
         </Pressable>
-        <Pressable onPress={() => router.push('/(onboarding)/permissoes-notificacao')}>
-          <Text style={styles.skip}>Continuar sem localização</Text>
+        <Pressable onPress={seguir}>
+          <Text style={styles.skip}>{deAjustes ? 'Voltar' : 'Continuar sem localização'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

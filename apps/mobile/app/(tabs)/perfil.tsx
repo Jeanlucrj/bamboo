@@ -4,6 +4,7 @@ import { supabase } from '../../src/services/supabase';
 import { stopBackgroundTracking } from '../../src/services/location/backgroundLocation';
 import { revokeThisDevice } from '../../src/services/device';
 import { bloqueioAtivo } from '../../src/services/bloqueio';
+import { useBloqueioStore } from '../../src/stores/bloqueio';
 import { spacing, type as typo, useColors, useTheme } from '../../src/theme';
 import { Tela, Cartao, Linha, Rotulo } from '../../src/components/Ui';
 
@@ -13,12 +14,18 @@ export default function PerfilScreen() {
   const router = useRouter();
   const c = useColors();
   const { pref } = useTheme();
+  const trancar = useBloqueioStore((s) => s.trancar);
 
   /**
    * Bloquear: tranca o app e MANTÉM a sessão.
    *
    * É o que quase todo mundo quer ao tocar em "sair" — e o que evita ter que
    * pedir link novo por e-mail a cada volta.
+   *
+   * Antes esta função fazia `router.replace('/(tabs)')` e mostrava um alerta
+   * dizendo "ao voltar, o Sentinela vai pedir sua biometria". Ela não mexia em
+   * estado nenhum: a tela de bloqueio não aparecia, o app continuava aberto, e
+   * a promessa do alerta era falsa. Agora o `trancar()` acende a tela na hora.
    */
   async function bloquear() {
     if (!(await bloqueioAtivo())) {
@@ -32,10 +39,7 @@ export default function PerfilScreen() {
       );
       return;
     }
-    // A tela de bloqueio aparece sozinha na próxima abertura; aqui basta
-    // mandar o app para segundo plano do ponto de vista do usuário.
-    router.replace('/(tabs)');
-    Alert.alert('App bloqueado', 'Ao voltar, o Sentinela vai pedir sua biometria.');
+    trancar();
   }
 
   function sair() {
@@ -107,21 +111,24 @@ export default function PerfilScreen() {
             valor={NOME_TEMA[pref]}
             onPress={() => router.push('/perfil/aparencia')}
           />
+          {/* "Bloqueio do app" aqui e "Bloquear app" logo abaixo em Conta eram
+              dois nomes quase idênticos para coisas diferentes — um abre a
+              configuração, o outro tranca agora. Os rótulos dizem qual é qual. */}
           <Linha
             glifo="🔒" cor={c.safe}
-            label="Bloqueio do app"
+            label="Configurar biometria"
             descricao="Entrar com digital, sem link por e-mail"
             onPress={() => router.push('/perfil/bloqueio')}
           />
           <Linha
             glifo="📍" cor={c.safe}
             label="Permissões de localização"
-            onPress={() => router.push('/(onboarding)/permissoes-localizacao')}
+            onPress={() => router.push('/(onboarding)/permissoes-localizacao?origem=ajustes')}
           />
           <Linha
             glifo="🔔" cor={c.grace}
             label="Notificações"
-            onPress={() => router.push('/(onboarding)/permissoes-notificacao')}
+            onPress={() => router.push('/(onboarding)/permissoes-notificacao?origem=ajustes')}
             ultima
           />
         </Cartao>
@@ -135,7 +142,7 @@ export default function PerfilScreen() {
           />
           <Linha
             glifo="🔐" cor={c.grace}
-            label="Bloquear app"
+            label="Bloquear agora"
             descricao="Mantém a sessão — volta com a digital"
             onPress={bloquear}
           />

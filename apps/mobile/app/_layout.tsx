@@ -27,9 +27,9 @@ import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
 import { Abertura } from '../src/components/Abertura';
 import { TelaBloqueio } from '../src/components/TelaBloqueio';
-import { bloqueioAtivo } from '../src/services/bloqueio';
 import { stopBackgroundTracking } from '../src/services/location/backgroundLocation';
 import { useSessionStore } from '../src/stores/session';
+import { useBloqueioStore } from '../src/stores/bloqueio';
 import { ThemeProvider, useColors, useTheme } from '../src/theme';
 
 export default function RootLayout() {
@@ -46,7 +46,7 @@ function RootNavigator() {
   const colors = useColors();
   const { scheme } = useTheme();
   const [aberturaVisivel, setAberturaVisivel] = useState(true);
-  const [trancado, setTrancado] = useState(false);
+  const trancado = useBloqueioStore((s) => s.trancado);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
@@ -69,8 +69,9 @@ function RootNavigator() {
    */
   useEffect(() => {
     if (!ready) return;
-    if (!session) { setTrancado(false); return; }
-    bloqueioAtivo().then(setTrancado);
+    const { destrancar, trancarSeConfigurado } = useBloqueioStore.getState();
+    if (!session) { destrancar(); return; }
+    trancarSeConfigurado();
   }, [ready, session?.user?.id]);
 
   /**
@@ -97,12 +98,51 @@ function RootNavigator() {
     return () => sub.remove();
   }, []);
 
-  // Guarda de rotas
+  /**
+   * Guarda de rotas.
+   *
+   * `TELAS_DE_ENTRADA` existe porque a versão anterior expulsava para as abas
+   * QUALQUER rota de `(onboarding)` assim que houvesse sessão — e o grupo tem
+   * duas telas que não são entrada: as de permissão de localização e de
+   * notificação. O efeito prático era que as duas nunca apareciam:
+   *
+   *   - No onboarding, o link mágico cria a sessão e a guarda dispara antes de
+   *     qualquer navegação para elas.
+   *   - No Perfil, "Permissões de localização" e "Notificações" pulavam direto
+   *     para a Home, porque o usuário logado tocando nelas caía exatamente no
+   *     caso `session && inOnboarding`.
+   *
+   * Não era cosmético. A tela de localização é priming: no iOS o diálogo de
+   * "Sempre" aparece UMA vez na vida do app, e negar por não entender o motivo
+   * só se desfaz nos Ajustes do sistema. Sem ela, o prompt nativo chegava cru,
+   * disparado lá de dentro da criação de viagem.
+   *
+   * Só `bem-vindo` e `login` precisam ser bloqueadas para quem já entrou.
+   */
   useEffect(() => {
     if (!ready) return;
-    const inOnboarding = segments[0] === '(onboarding)';
-    if (!session && !inOnboarding) router.replace('/(onboarding)/bem-vindo');
-    else if (session && inOnboarding) router.replace('/(tabs)');
+    const TELAS_DE_ENTRADA = ['bem-vindo', 'login'];
+    // `useSegments()` é tipado como tupla de tamanho 1; ler o índice 1 direto
+    // não compila, embora em tempo de execução o array tenha a rota inteira.
+    const partes = segments as unknown as string[];
+    const inOnboarding = partes[0] === '(onboarding)';
+    const naEntrada = inOnboarding && TELAS_DE_ENTRADA.includes(partes[1] ?? '');
+
+    if (!session && !inOnboarding) {
+      router.replace('/(onboarding)/bem-vindo');
+      return;
+    }
+    if (!session || !naEntrada) return;
+
+    // Quem ACABOU de entrar pelo link mágico passa pelo priming de localização
+    // antes das abas — é o único momento em que dá para explicar o "Sempre"
+    // antes do diálogo do sistema. As telas de permissão encadeiam até
+    // `replace('/(tabs)')` no fim.
+    //
+    // Quem abre o app com sessão já salva não passa por aqui: `segments[0]`
+    // nem é `(onboarding)`, e a guarda não toca em nada.
+    if (partes[1] === 'login') router.replace('/(onboarding)/permissoes-localizacao');
+    else router.replace('/(tabs)');
   }, [session, ready, segments]);
 
   // Pós-login
@@ -135,7 +175,17 @@ function RootNavigator() {
   // esvaziar a fila offline — é quando há mais chance de ter rede.
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (state) => {
-      if (state !== 'active' || !session) return;
+      // Marca a saída para o bloqueio saber há quanto tempo o app está fora do
+      // primeiro plano. Sem isto, a biometria só era pedida em partida fria: o
+      // celular destravado com o Sentinela em segundo plano abria direto.
+      if (state !== 'active') {
+        useBloqueioStore.getState().aoSair();
+        return;
+      }
+
+      await useBloqueioStore.getState().aoVoltar();
+
+      if (!session) return;
 
       await flushQueue();
 
@@ -204,11 +254,11 @@ function RootNavigator() {
           primeiro e revela o bloqueio, sem piscar a árvore de navegação. */}
       {trancado && !aberturaVisivel && (
         <TelaBloqueio
-          onDesbloquear={() => setTrancado(false)}
+          onDesbloquear={() => useBloqueioStore.getState().destrancar()}
           onSair={async () => {
             await stopBackgroundTracking().catch(() => {});
             await supabase.auth.signOut();
-            setTrancado(false);
+            useBloqueioStore.getState().destrancar();
           }}
         />
       )}

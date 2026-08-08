@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { emergencyContactInput } from '@sentinela/shared';
+import { emergencyContactInput, normalizarTelefone } from '@sentinela/shared';
 
 import { supabase } from '../../src/services/supabase';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
@@ -29,6 +29,13 @@ export default function NovoContato() {
   const [priority, setPriority] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  const telefoneE164 = normalizarTelefone(phone);
+  const dicaTelefone = !phone.trim()
+    ? 'Pode escrever como você escreveria para alguém: +55 11 97718-3338'
+    : telefoneE164 === phone.trim()
+      ? 'Pronto para envio internacional'
+      : `Vai salvar como ${telefoneE164}`;
 
   async function submit() {
     setErrors({});
@@ -123,16 +130,17 @@ export default function NovoContato() {
         />
       </Field>
 
-      <Field
-        label="Telefone"
-        hint="Formato internacional, com código do país: +5511999999999"
-        error={errors.phone}
-      >
+      {/* O hint mostra o número JÁ normalizado. Antes ele dizia "formato
+          internacional" e recusava +55 11 97718-3338, que é formato
+          internacional — a pessoa relia a instrução, via que estava cumprindo,
+          e não tinha como saber que o problema era o espaço. Agora o campo
+          aceita como se escreve e prova o que vai gravar. */}
+      <Field label="Telefone" hint={dicaTelefone} error={errors.phone}>
         <TextInput
           style={styles.input}
           value={phone}
           onChangeText={setPhone}
-          placeholder="+5511999999999"
+          placeholder="+55 11 97718-3338"
           placeholderTextColor={c.textFaint}
           keyboardType="phone-pad"
           autoCapitalize="none"

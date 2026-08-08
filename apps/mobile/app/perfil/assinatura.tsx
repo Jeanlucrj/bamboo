@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, View, Text, Linking } from 'react-native';
+import { ScrollView, View, Text, Linking, Alert } from 'react-native';
 import { PLANS } from '@sentinela/shared';
 import { supabase } from '../../src/services/supabase';
 import { spacing, type as typo, useColors } from '../../src/theme';
@@ -11,7 +11,15 @@ type Assinatura = {
   current_period_end: string | null;
 };
 
-const SITE = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://sentinela.app';
+/**
+ * `sentinela.app` era o valor padrão daqui — um domínio que não existe. Como
+ * `EXPO_PUBLIC_SITE_URL` não está definida em nenhum ambiente, o botão "Abrir
+ * no site" abria o navegador num endereço inexistente, sempre.
+ *
+ * Sem site configurado, a seção de gerenciamento não aparece. Um botão que
+ * leva a lugar nenhum é pior que a ausência dele.
+ */
+const SITE = process.env.EXPO_PUBLIC_SITE_URL?.trim() || null;
 
 export default function AssinaturaScreen() {
   const c = useColors();
@@ -75,12 +83,28 @@ export default function AssinaturaScreen() {
           exigiria a cobrança da loja, que retém percentual e complica o cancelamento.
         </Paragrafo>
 
-        <View style={{ height: spacing.md }} />
-        <Botao
-          label="Abrir no site"
-          tom="neutro"
-          onPress={() => Linking.openURL(`${SITE}/precos`)}
-        />
+        {SITE ? (
+          <>
+            <View style={{ height: spacing.md }} />
+            <Botao
+              label="Abrir no site"
+              tom="neutro"
+              onPress={() => {
+                Linking.openURL(`${SITE}/precos`).catch(() =>
+                  Alert.alert('Não foi possível abrir', `Acesse ${SITE}/precos pelo navegador.`),
+                );
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <View style={{ height: spacing.md }} />
+            <Aviso tom="info" titulo="Cobrança ainda não está no ar">
+              Enquanto isso todo mundo usa o plano completo. Quando a assinatura entrar, este
+              botão leva direto para a página de planos.
+            </Aviso>
+          </>
+        )}
 
         <View style={{ height: spacing.xl }} />
         <Text style={{ ...typo.caption, color: c.textFaint, lineHeight: 18 }}>

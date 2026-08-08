@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/services/supabase';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
@@ -68,18 +68,20 @@ export default function Login() {
               {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryLabel}>Receber link de acesso</Text>}
             </Pressable>
 
-            <Text style={styles.divider}>ou</Text>
+            {/* Aqui existiam "Continuar com Google" e "Continuar com Apple"
+                com onPress vazio: botões com cara de funcionais que não faziam
+                absolutamente nada ao toque. E não era questão de ligar o fio —
+                os dois provedores estão desativados no projeto Supabase
+                (/auth/v1/settings devolve "google":false, "apple":false), então
+                nem com handler eles entrariam.
 
-            {/* Login com Apple é OBRIGATÓRIO na App Store se houver
-                qualquer outro login social. Não é opcional. */}
-            {Platform.OS === 'ios' && (
-              <Pressable style={styles.social} onPress={() => {/* expo-apple-authentication */}}>
-                <Text style={styles.socialLabel}> Continuar com Apple</Text>
-              </Pressable>
-            )}
-            <Pressable style={styles.social} onPress={() => {/* expo-auth-session + Google */}}>
-              <Text style={styles.socialLabel}>Continuar com Google</Text>
-            </Pressable>
+                Um botão morto na tela de login é pior que a ausência dele: a
+                pessoa toca, nada acontece, e a conclusão é que o app está
+                quebrado — não que aquela opção não existe.
+
+                Quando o login social entrar, é preciso habilitar o provedor no
+                Supabase E lembrar que a App Store exige "Continuar com Apple"
+                em qualquer app que ofereça outro login social. */}
           </>
         )}
       </View>
@@ -112,13 +114,6 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginTop: spacing.md,
   },
   primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
-  divider: { ...typo.caption, color: c.textFaint, textAlign: 'center', marginVertical: spacing.md },
-  social: {
-    height: 52, borderRadius: radius.md, backgroundColor: c.surface,
-    borderWidth: 1, borderColor: c.border,
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
-  },
-  socialLabel: { ...typo.body, color: c.text, fontWeight: '600' },
   sentBox: { backgroundColor: c.surface, borderRadius: radius.md, padding: spacing.lg },
   sentTitle: { ...typo.h2, color: c.text },
   sentBody: { ...typo.small, color: c.textMuted, marginTop: spacing.sm, lineHeight: 20 },

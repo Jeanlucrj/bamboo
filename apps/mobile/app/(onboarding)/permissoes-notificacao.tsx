@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { registerForPush } from '../../src/services/notifications';
 import { spacing, radius, type as typo, useColors } from '../../src/theme';
 
@@ -29,8 +29,14 @@ export default function PermissoesNotificacao() {
     else setNegado(true);
   }
 
+  // Aberta pelo Perfil, esta tela precisa devolver o usuário de onde ele veio.
+  // O `replace('/(tabs)')` fixo o jogava na Home e o fazia navegar de novo até
+  // as configurações para continuar o que estava fazendo.
+  const { origem } = useLocalSearchParams<{ origem?: string }>();
+
   function concluir() {
-    router.replace('/(tabs)');
+    if (origem === 'ajustes') router.back();
+    else router.replace('/(tabs)');
   }
 
   return (

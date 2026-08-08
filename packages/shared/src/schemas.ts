@@ -33,13 +33,68 @@ export const travelSessionInput = z.object({
 });
 export type TravelSessionInput = z.infer<typeof travelSessionInput>;
 
+/** E.164 — o formato que todo gateway de SMS/WhatsApp exige na entrega. */
+const E164 = /^\+[1-9]\d{7,14}$/;
+
+/**
+ * Põe o telefone em E.164 antes de validar.
+ *
+ * A validação antiga era só a regex acima, aplicada ao que a pessoa digitou.
+ * Resultado: `+55 11 97718-3338` era recusado com "use o formato
+ * internacional" — sendo que o número ESTÁ em formato internacional. O que a
+ * regex não aceitava era o espaço e o hífen, que é exatamente como um número
+ * é escrito em todo lugar: no contato do celular, no cartão, no WhatsApp.
+ *
+ * Ninguém digita `+5511977183338` colado. Exigir isso e chamar de "formato
+ * internacional" é pedir uma coisa e nomear outra — e o preço aqui é alto,
+ * porque um contato de emergência que a pessoa desiste de cadastrar é um
+ * alarme que dispara sem ter para quem ligar.
+ *
+ * O que fazemos:
+ *
+ *   pontuação      espaço, hífen, parênteses e ponto somem sempre. Não há
+ *                  ambiguidade nenhuma nisso.
+ *   prefixo 00     é o código internacional discado em boa parte do mundo
+ *                  (`0055 11…`), então vira `+`.
+ *   sem código     10 ou 11 dígitos é telefone brasileiro com DDD — fixo ou
+ *                  celular com o 9. O app é pt-BR, então assumimos +55.
+ *
+ * O último caso é o único que envolve suposição, e por isso a tela mostra o
+ * número já normalizado embaixo do campo ANTES de salvar. Adivinhar o país
+ * errado em silêncio mandaria o alerta para um desconhecido — mostrar o
+ * resultado transforma a suposição em algo que a pessoa confere num relance.
+ */
+export function normalizarTelefone(bruto: unknown): string {
+  if (typeof bruto !== 'string') return '';
+
+  const cru = bruto.trim();
+  if (!cru) return '';
+
+  const comMais = cru.startsWith('+') ? cru : cru.replace(/^00\s*/, '+');
+  const digitos = comMais.replace(/\D/g, '');
+  if (!digitos) return cru; // devolve o original para o erro citar o que foi digitado
+
+  if (comMais.startsWith('+')) return `+${digitos}`;
+  if (digitos.length === 10 || digitos.length === 11) return `+55${digitos}`;
+
+  // Sem `+` e sem cara de número brasileiro: não inventamos país. A regex
+  // recusa e a mensagem explica o que falta.
+  return digitos;
+}
+
 export const emergencyContactInput = z
   .object({
-    full_name: z.string().min(2).max(120),
+    full_name: z.string().min(2, 'Escreva o nome completo').max(120),
     relationship: z.string().max(60).optional(),
-    email: z.string().email().optional().or(z.literal('')),
-    // E.164: sem isso o Twilio recusa metade dos números internacionais.
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, 'Use o formato internacional: +5511999999999').optional().or(z.literal('')),
+    email: z.string().email('E-mail inválido').optional().or(z.literal('')),
+    phone: z.preprocess(
+      normalizarTelefone,
+      z
+        .string()
+        .regex(E164, 'Inclua o código do país. Ex.: +55 11 97718-3338')
+        .optional()
+        .or(z.literal('')),
+    ),
     preferred_channel: z.enum(['email', 'sms', 'whatsapp']).default('email'),
     locale: z.string().default('pt-BR'),
     priority: z.number().int().min(1).max(10).default(1),
