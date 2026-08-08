@@ -140,8 +140,26 @@ async function handleAlert(db: ReturnType<typeof admin>, row: Row) {
     .limit(1)
     .maybeSingle();
 
+  // Nome do país, não a sigla. O rótulo era `[city, country_code].join(', ')`,
+  // e quando o ping mais recente vinha sem cidade — área rural, e foi o caso
+  // real de um ping em Pai, na Tailândia — a mensagem que chegava ao contato
+  // dizia "Ultima posicao: TH".
+  //
+  // Isso vai por WhatsApp para alguém que acabou de descobrir que um parente
+  // sumiu. "TH" não é um lugar: não dá para pesquisar, repetir ao telefone,
+  // nem passar para quem vai socorrer.
+  let paisLabel = lastLoc?.country_code ?? null;
+  if (lastLoc?.country_code) {
+    const { data: pais } = await db
+      .from('country_emergency_numbers')
+      .select('country_name')
+      .eq('country_code', lastLoc.country_code)
+      .maybeSingle();
+    if (pais?.country_name) paisLabel = pais.country_name;
+  }
+
   const lastSeenLabel = lastLoc
-    ? [lastLoc.city, lastLoc.country_code].filter(Boolean).join(', ') || 'Posição registrada'
+    ? [lastLoc.city, paisLabel].filter(Boolean).join(', ') || 'Posição registrada'
     : 'Nenhuma localização registrada';
 
   const { data: contacts } = await db

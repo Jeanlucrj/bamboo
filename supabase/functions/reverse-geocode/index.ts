@@ -159,8 +159,18 @@ async function lookupMapbox(lng: number, lat: number): Promise<Place | null> {
 async function lookupNominatim(lng: number, lat: number): Promise<Place | null> {
   try {
     await new Promise((r) => setTimeout(r, 1100));
+    // `accept-language` não é detalhe de acabamento. Sem ele o Nominatim
+    // devolve o topônimo no idioma local, e um ping em Chiang Mai virava
+    // "เทศบาลนครเชียงใหม่" no banco. Quem lê isso é o contato de emergência,
+    // em pânico, tentando descobrir ONDE a pessoa está — um nome que ele não
+    // consegue ler, digitar ou pesquisar não serve para nada.
+    //
+    // A ordem é a da preferência: português, depois inglês, depois o que
+    // houver. Inglês entra como segundo porque quase toda cidade tem exônimo
+    // em inglês e quase nenhuma tem em português.
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`,
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10` +
+        `&accept-language=pt-BR,pt,en`,
       { headers: { 'User-Agent': Deno.env.get('NOMINATIM_USER_AGENT') ?? 'sentinela-dev/0.1' } },
     );
     if (!res.ok) return null;

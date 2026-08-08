@@ -71,9 +71,20 @@ export default async function DossierPage({
         <Card title="Última localização conhecida">
           {d.last_known ? (
             <>
+              {/* O rótulo era `[city, country_code].join(', ')`. Quando o ping
+                  mais recente vem sem cidade — acontece em área rural, e foi
+                  exatamente o caso numa simulação em Pai, na Tailândia — o
+                  título virava a sigla crua: "TH".
+
+                  Quem lê esta página está com a mão tremendo tentando
+                  descobrir para onde ir. "TH" não é um lugar: não dá para
+                  pesquisar, repetir ao telefone nem dizer a um despachante.
+                  `local_emergency.country_name` já traz "Tailândia" e estava
+                  ali ao lado, usado só no bloco de telefones. */}
               <p className="text-xl font-bold">
-                {[d.last_known.city, d.last_known.country_code].filter(Boolean).join(', ') ||
-                  'Coordenadas registradas'}
+                {[d.last_known.city, d.local_emergency?.country_name ?? d.last_known.country_code]
+                  .filter(Boolean)
+                  .join(', ') || 'Coordenadas registradas'}
               </p>
               <p className="mt-1 text-sm text-slate-500">
                 {fmt(d.last_known.recorded_at)}
