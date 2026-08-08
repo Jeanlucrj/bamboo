@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import type { TravelStats, CountryVisit } from '@sentinela/shared';
+import type { TravelStats, CountryVisit, TripHistoryItem } from '@sentinela/shared';
 import { requireUser } from '@/lib/auth/requireUser';
+import { HistoricoViagens } from '@/components/app/HistoricoViagens';
 import { flagEmoji, formatKm, formatDate, humanDuration } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,7 @@ type Visit = CountryVisit & {
 export default async function DiarioPage() {
   const { supabase } = await requireUser('/diario');
 
-  const [{ data: statsRows }, { data: visitRows }] = await Promise.all([
+  const [{ data: statsRows }, { data: visitRows }, { data: tripRows }] = await Promise.all([
     // Pela RPC, não pela MV: mv_user_travel_stats não suporta RLS e teve o
     // acesso direto revogado na migration 07. get_my_travel_stats() é
     // SECURITY DEFINER e filtra por auth.uid().
@@ -38,7 +39,10 @@ export default async function DiarioPage() {
       .select('country_code, entered_at, left_at, duration, ping_count')
       .order('entered_at', { ascending: false })
       .limit(200),
+    supabase.rpc('get_my_trip_history'),
   ]);
+
+  const viagens = (tripRows ?? []) as TripHistoryItem[];
 
   const raw = (statsRows ?? [])[0] as TravelStats | undefined;
 
@@ -68,10 +72,29 @@ export default async function DiarioPage() {
 
   const hasData = s.days_tracked > 0 || visits.length > 0;
 
+  // As viagens aparecem mesmo sem GPS: uma viagem com o rastreamento desligado
+  // tem 0 km e nenhuma cidade, e isso é um fato sobre ela — não motivo para a
+  // página inteira virar estado vazio. Antes, quem tivesse viajado assim lia
+  // "seu diário começa no primeiro quilômetro" tendo feito várias viagens.
+  const secaoViagens = viagens.length > 0 && (
+    <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-7">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+        Suas viagens
+      </h2>
+      <p className="mt-1 text-xs text-slate-500">
+        Datas, quilômetros, países e cidades de cada uma. Toque para abrir.
+      </p>
+      <div className="mt-5">
+        <HistoricoViagens viagens={viagens} />
+      </div>
+    </section>
+  );
+
   if (!hasData) {
     return (
       <>
         <Header refreshedAt={s.refreshed_at} />
+        {secaoViagens}
         <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center">
           <p className="text-5xl">🗺️</p>
           <h2 className="mt-5 text-xl font-bold text-white">
@@ -133,6 +156,8 @@ export default async function DiarioPage() {
         />
         <Stat value={s.trips_completed} label="viagens concluídas" />
       </section>
+
+      {secaoViagens}
 
       {/* O passaporte. É o que a pessoa manda print para os amigos. */}
       {s.countries.length > 0 && (

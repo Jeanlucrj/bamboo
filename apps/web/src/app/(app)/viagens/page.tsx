@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import type { SafetyState } from '@sentinela/shared';
+import type { TripHistoryItem } from '@sentinela/shared';
 import { requireUser } from '@/lib/auth/requireUser';
 import { NovaViagemForm } from '@/components/app/NovaViagemForm';
 import { ViagemAtiva, type ViagemRow } from '@/components/app/ViagemAtiva';
-import { formatDate, intervalToHours } from '@/lib/format';
+import { HistoricoViagens } from '@/components/app/HistoricoViagens';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,15 +18,21 @@ const COLUNAS =
 export default async function ViagensPage() {
   const { supabase, user } = await requireUser('/viagens');
 
-  const { data } = await supabase
-    .from('travel_sessions')
-    .select(COLUNAS)
-    .eq('user_id', user.id)
-    .order('starts_at', { ascending: false });
+  const [{ data }, { data: historico }] = await Promise.all([
+    supabase
+      .from('travel_sessions')
+      .select(COLUNAS)
+      .eq('user_id', user.id)
+      .order('starts_at', { ascending: false }),
+    // A tabela sozinha não tem km, países nem cidades — isso mora em
+    // location_logs e em analytics.v_valid_segments, que a API não expõe. A
+    // RPC agrega por viagem e é a mesma que o app consome.
+    supabase.rpc('get_my_trip_history'),
+  ]);
 
   const todas = data ?? [];
   const ativa = todas.find((t) => t.status === 'active');
-  const passadas = todas.filter((t) => t.status !== 'active');
+  const passadas = ((historico ?? []) as TripHistoryItem[]).filter((t) => t.status !== 'active');
 
   return (
     <>
@@ -62,45 +68,14 @@ export default async function ViagensPage() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
             Histórico
           </h2>
-          <ul className="mt-5 space-y-2">
-            {passadas.map((t) => (
-              <li
-                key={t.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-5 py-4"
-              >
-                <div>
-                  <p className="font-semibold text-white">{t.title}</p>
-                  <p className="text-xs text-slate-500">
-                    {t.destination_label ? `${t.destination_label} · ` : ''}
-                    {formatDate(t.starts_at)}
-                    {t.ends_at ? ` — ${formatDate(t.ends_at)}` : ''}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500">
-                    check-in de {intervalToHours(t.checkin_interval)}h
-                  </p>
-                  <p className="text-xs font-semibold text-slate-400">
-                    {rotuloStatus(t.status, t.state as SafetyState)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <p className="mt-1 text-xs text-slate-500">
+            Toque numa viagem para ver países, cidades e check-ins.
+          </p>
+          <div className="mt-5">
+            <HistoricoViagens viagens={passadas} />
+          </div>
         </section>
       )}
     </>
-  );
-}
-
-function rotuloStatus(status: string, state: SafetyState): string {
-  if (state === 'resolved') return 'encerrada após incidente';
-  return (
-    {
-      completed: 'concluída',
-      cancelled: 'cancelada',
-      paused: 'pausada',
-      draft: 'rascunho',
-    }[status] ?? status
   );
 }
