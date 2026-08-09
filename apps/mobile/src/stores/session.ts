@@ -12,7 +12,8 @@ type SessionStore = {
 
   load: () => Promise<void>;
   checkIn: () => Promise<void>;
-  subscribe: () => () => void;
+  /** `userId` monta o tópico privado `viagens:<uuid>`. */
+  subscribe: (userId: string) => () => void;
   setState: (s: SafetyStateDb) => void;
 };
 
@@ -91,18 +92,35 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }
   },
 
-  /** Realtime: escuta criação, atualização e encerramento de viagens no servidor (web ou cron). */
-  subscribe() {
+  /**
+   * Escuta criação, atualização e encerramento de viagens vindos de fora —
+   * site, cron ou outro aparelho.
+   *
+   * BROADCAST, e não `postgres_changes`. A versão anterior usava
+   * `postgres_changes` e simplesmente não entregava: com a tabela publicada, a
+   * inscrição registrada no banco como `authenticated`, a RLS correta e o slot
+   * de replicação ativo, o canal respondia SUBSCRIBED e nenhum evento chegava.
+   * Um broadcast no mesmo canal, com o mesmo token, voltava na hora — o que
+   * isolou o defeito na leitura do WAL, dentro da infraestrutura gerenciada.
+   *
+   * Agora quem emite é um gatilho no banco (`tg_broadcast_viagem`), pelo
+   * caminho que funciona. O tópico é por usuário, então o servidor entrega só
+   * a quem interessa em vez de espalhar e filtrar depois.
+   */
+  subscribe(userId) {
     const channel = supabase
-      .channel('realtime:travel_sessions')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'travel_sessions' },
-        async () => {
-          await get().load();
-        },
-      )
-      .subscribe();
+      .channel(`viagens:${userId}`, { config: { private: true } })
+      .on('broadcast', { event: 'INSERT' }, () => get().load())
+      .on('broadcast', { event: 'UPDATE' }, () => get().load())
+      .on('broadcast', { event: 'DELETE' }, () => get().load())
+      .subscribe((status) => {
+        // Canal privado depende de política em realtime.messages. Se ela sair
+        // do ar o erro aparece aqui — e não como silêncio, que foi o que fez o
+        // problema anterior demorar tanto para ser encontrado.
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('[sentinela] canal de viagens não autorizado:', status);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

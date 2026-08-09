@@ -174,7 +174,7 @@ function RootNavigator() {
      * SUBSCRIBED e nunca entrega nada. Este efeito só roda quando `session` já
      * existe, então o token está em mãos.
      */
-    const cancelarInscricao = useSessionStore.getState().subscribe();
+    const cancelarInscricao = useSessionStore.getState().subscribe(session.user.id);
 
     // Push e registro de aparelho em paralelo, isolados. São importantes — o
     // device_id carimba os sinais e o push entrega o aviso antes do alerta —
