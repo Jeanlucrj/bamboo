@@ -428,3 +428,36 @@ html[data-theme="light"] .gradient-text-hero {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ================================================================
+   BOTÃO FLUTUANTE DE WHATSAPP
+   ================================================================
+   Dois movimentos em elementos separados, e a separação é o ponto:
+   `transform` é uma propriedade só, então duas regras mexendo nela se
+   sobrescrevem. Com o embalo no pai e a inércia no filho, os dois se
+   compõem naturalmente — e o `scale` do hover ainda cabe por cima. */
+
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
+.flutuante {
+  animation: flutuar 3.2s ease-in-out infinite;
+}
+
+/* Deslocamento vindo da rolagem. O valor é escrito pelo JS a cada quadro; aqui
+   só declaramos onde ele entra. Sem transição CSS de propósito: quem suaviza é
+   a interpolação no requestAnimationFrame, e as duas juntas brigariam. */
+.inercia {
+  transform: translateY(var(--deslocamento, 0px));
+  will-change: transform;
+}
+
+/* Movimento perpétuo na periferia da visão é gatilho de enjoo para quem tem
+   sensibilidade vestibular. O botão continua inteiro e clicável — só para de
+   se mexer. */
+@media (prefers-reduced-motion: reduce) {
+  .flutuante { animation: none; }
+  .inercia   { transform: none; }
+}
