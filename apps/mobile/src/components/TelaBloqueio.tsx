@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Pressable, StyleSheet } from 'react-native';
 import { pedirBiometria } from '../services/bloqueio';
+import { useBloqueioStore } from '../stores/bloqueio';
 
 /**
  * Tela de desbloqueio.
@@ -34,7 +35,14 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
   async function tentar() {
     setTentando(true);
     setFalha(null);
-    const r = await pedirBiometria('Desbloqueie o Sentinela');
+
+    // O diálogo do sistema tira o app do primeiro plano. Sem avisar a store,
+    // a volta dele seria lida como "entrou de novo" e abriria outro diálogo —
+    // laço infinito com o usuário preso do lado de fora.
+    useBloqueioStore.getState().marcarAutenticando(true);
+    const r = await pedirBiometria('Entrar no Sentinela');
+    useBloqueioStore.getState().marcarAutenticando(false);
+
     setTentando(false);
     if (r.ok) onDesbloquear();
     else setFalha(r.motivo);

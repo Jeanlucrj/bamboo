@@ -268,11 +268,16 @@ function RootNavigator() {
   // esvaziar a fila offline — é quando há mais chance de ter rede.
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (state) => {
-      // Voltar do segundo plano NÃO pede biometria de novo. A confirmação é da
-      // abertura do app, uma vez — não uma trava que reaparece a cada troca de
-      // aplicativo. Num app de emergência, uma tela por cima do botão de
-      // pânico custa mais do que protege.
-      if (state !== 'active' || !session) return;
+      // Voltar do segundo plano também é ENTRAR no app, então também pede
+      // biometria — com a janela de tolerância da store, que existe para o
+      // próprio diálogo do sistema não virar laço infinito.
+      if (state !== 'active') {
+        useBloqueioStore.getState().aoSair();
+        return;
+      }
+
+      await useBloqueioStore.getState().aoVoltar();
+      if (!session) return;
 
       await registrarAbertura();
     });

@@ -20,6 +20,12 @@
           "remote-notification",
           "location",
           "fetch",
+          "remote-notification",
+          "location",
+          "fetch",
+          "remote-notification",
+          "location",
+          "fetch",
           "remote-notification"
         ],
         "NSLocationWhenInUseUsageDescription": "Usamos sua localização para registrar seu diário de viagem e saber seu último ponto conhecido.",
@@ -114,6 +120,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/93a1491f-71f3-4f2d-bdc2-49d608f46f06"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
