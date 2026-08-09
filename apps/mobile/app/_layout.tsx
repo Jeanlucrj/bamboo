@@ -47,7 +47,7 @@ function RootNavigator() {
   const colors = useColors();
   const { scheme } = useTheme();
   const [aberturaVisivel, setAberturaVisivel] = useState(true);
-  const trancado = useBloqueioStore((s) => s.trancado);
+  const aguardandoEntrada = useBloqueioStore((s) => s.aguardandoEntrada);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
@@ -70,9 +70,9 @@ function RootNavigator() {
    */
   useEffect(() => {
     if (!ready) return;
-    const { destrancar, trancarSeConfigurado } = useBloqueioStore.getState();
-    if (!session) { destrancar(); return; }
-    trancarSeConfigurado();
+    const { reiniciar, avaliarNaAbertura } = useBloqueioStore.getState();
+    if (!session) { reiniciar(); return; }
+    avaliarNaAbertura();
   }, [ready, session?.user?.id]);
 
   /**
@@ -243,16 +243,11 @@ function RootNavigator() {
   // esvaziar a fila offline — é quando há mais chance de ter rede.
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (state) => {
-      // Marca a saída para o bloqueio saber há quanto tempo o app está fora do
-      // primeiro plano. Sem isto, a biometria só era pedida em partida fria: o
-      // celular destravado com o Sentinela em segundo plano abria direto.
-      if (state !== 'active') {
-        useBloqueioStore.getState().aoSair();
-        return;
-      }
-
-      await useBloqueioStore.getState().aoVoltar();
-      if (!session) return;
+      // Voltar do segundo plano NÃO pede biometria de novo. A confirmação é da
+      // abertura do app, uma vez — não uma trava que reaparece a cada troca de
+      // aplicativo. Num app de emergência, uma tela por cima do botão de
+      // pânico custa mais do que protege.
+      if (state !== 'active' || !session) return;
 
       await registrarAbertura();
     });
@@ -306,13 +301,13 @@ function RootNavigator() {
           pisca-pisca entre onboarding e abas. */}
       {/* Abaixo da abertura na pilha: quando as duas existem, a abertura sai
           primeiro e revela o bloqueio, sem piscar a árvore de navegação. */}
-      {trancado && !aberturaVisivel && (
+      {aguardandoEntrada && !aberturaVisivel && (
         <TelaBloqueio
-          onDesbloquear={() => useBloqueioStore.getState().destrancar()}
+          onDesbloquear={() => useBloqueioStore.getState().liberar()}
           onSair={async () => {
             await stopBackgroundTracking().catch(() => {});
             await supabase.auth.signOut();
-            useBloqueioStore.getState().destrancar();
+            useBloqueioStore.getState().reiniciar();
           }}
         />
       )}

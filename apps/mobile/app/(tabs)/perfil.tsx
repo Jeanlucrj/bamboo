@@ -1,10 +1,8 @@
-import { ScrollView, View, Text, Alert } from 'react-native';
+import { ScrollView, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/services/supabase';
 import { stopBackgroundTracking } from '../../src/services/location/backgroundLocation';
 import { revokeThisDevice } from '../../src/services/device';
-import { bloqueioAtivo } from '../../src/services/bloqueio';
-import { useBloqueioStore } from '../../src/stores/bloqueio';
 import { Identidade } from '../../src/components/Identidade';
 import { spacing, type as typo, useColors, useTheme } from '../../src/theme';
 import { Tela, Cartao, Linha, Rotulo } from '../../src/components/Ui';
@@ -15,38 +13,11 @@ export default function PerfilScreen() {
   const router = useRouter();
   const c = useColors();
   const { pref } = useTheme();
-  const trancar = useBloqueioStore((s) => s.trancar);
-
-  /**
-   * Bloquear: tranca o app e MANTÉM a sessão.
-   *
-   * É o que quase todo mundo quer ao tocar em "sair" — e o que evita ter que
-   * pedir link novo por e-mail a cada volta.
-   *
-   * Antes esta função fazia `router.replace('/(tabs)')` e mostrava um alerta
-   * dizendo "ao voltar, o Sentinela vai pedir sua biometria". Ela não mexia em
-   * estado nenhum: a tela de bloqueio não aparecia, o app continuava aberto, e
-   * a promessa do alerta era falsa. Agora o `trancar()` acende a tela na hora.
-   */
-  async function bloquear() {
-    if (!(await bloqueioAtivo())) {
-      Alert.alert(
-        'Ative o bloqueio primeiro',
-        'Sem biometria configurada, trancar o app deixaria você sem como voltar.',
-        [
-          { text: 'Agora não', style: 'cancel' },
-          { text: 'Configurar', onPress: () => router.push('/perfil/bloqueio') },
-        ],
-      );
-      return;
-    }
-    trancar();
-  }
 
   function sair() {
     Alert.alert(
       'Sair da conta?',
-      'A sessão é destruída e voltar exigirá um link novo por e-mail. Para o uso do dia a dia, prefira bloquear.',
+      'A sessão é destruída e voltar exigirá um link novo por e-mail. Se é só para fechar o app, não precisa: basta sair — a biometria abre da próxima vez.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -138,13 +109,10 @@ export default function PerfilScreen() {
             valor={NOME_TEMA[pref]}
             onPress={() => router.push('/perfil/aparencia')}
           />
-          {/* "Bloqueio do app" aqui e "Bloquear app" logo abaixo em Conta eram
-              dois nomes quase idênticos para coisas diferentes — um abre a
-              configuração, o outro tranca agora. Os rótulos dizem qual é qual. */}
           <Linha
             glifo="🔒" cor={c.safe}
-            label="Configurar biometria"
-            descricao="Entrar com digital, sem link por e-mail"
+            label="Entrar com biometria"
+            descricao="Abrir o app com a digital, sem link por e-mail"
             onPress={() => router.push('/perfil/bloqueio')}
           />
           <Linha
@@ -167,12 +135,10 @@ export default function PerfilScreen() {
             label="Assinatura"
             onPress={() => router.push('/perfil/assinatura')}
           />
-          <Linha
-            glifo="🔐" cor={c.grace}
-            label="Bloquear agora"
-            descricao="Mantém a sessão — volta com a digital"
-            onPress={bloquear}
-          />
+          {/* Havia aqui um "Bloquear agora", que trancava o app na hora.
+              Removido: biometria neste produto serve para ENTRAR, não para
+              fechar a porta com a pessoa do lado de fora. Quem quer sair de
+              verdade usa a linha abaixo. */}
           <Linha
             glifo="🚪" label="Sair da conta" destrutivo
             descricao="Destrói a sessão — volta exige link novo"

@@ -2,69 +2,44 @@ import { create } from 'zustand';
 import { bloqueioAtivo } from '../services/bloqueio';
 
 /**
- * Estado de "o app está trancado agora".
+ * Biometria como FORMA DE ENTRAR — não como cadeado.
  *
- * Precisa ser um store, e não estado local do layout raiz, por dois motivos que
- * eram bugs reais:
+ * A distinção decide tudo o que este arquivo faz:
  *
- * 1. O botão "Bloquear app" no Perfil não tinha como trancar coisa alguma. Ele
- *    fazia `router.replace('/(tabs)')` e mostrava um alerta dizendo "ao voltar,
- *    o Sentinela vai pedir sua biometria" — mas não mexia em estado nenhum. O
- *    app continuava destrancado na tela seguinte, e a mensagem estava
- *    simplesmente errada.
+ *   entrar   acontece UMA vez, ao abrir o app. É o que substitui o link
+ *            mágico por e-mail. A sessão continua salva no aparelho; a digital
+ *            só confirma quem está abrindo.
  *
- * 2. O único lugar que decidia trancar era um efeito com dependência
- *    `[ready, session.user.id]`. Nenhum dos dois muda quando o app vai para
- *    segundo plano e volta — então a biometria só era pedida em partida fria.
- *    Alguém que pegasse o celular destravado com o Sentinela em segundo plano
- *    entrava direto, que é exatamente o cenário que o bloqueio existe para
- *    cobrir.
+ *   travar   é o que este arquivo NÃO faz mais. A versão anterior re-trancava
+ *            o app sozinha depois de 2 minutos em segundo plano e ainda tinha
+ *            um botão "Bloquear agora" no Perfil. Na prática isso pedia
+ *            digital no meio do uso: trocar para o mapa, voltar, e o app
+ *            estava fechado de novo.
  *
- * A JANELA DE TOLERÂNCIA:
+ * Num app de emergência isso é pior do que chato. O botão de pânico fica atrás
+ * de qualquer tela que apareça por cima — e a pessoa que precisa dele tem
+ * alguns segundos, não uma etapa de autenticação.
  *
- * Trancar a cada ida ao segundo plano pediria digital toda vez que a pessoa
- * consultasse a hora ou copiasse um código. Num app de emergência isso é pior
- * do que parece: atrito no caminho do botão de pânico. Por outro lado, sem
- * limite nenhum o bloqueio não protege nada.
- *
- * 2 minutos separa os dois casos: trocar de app e voltar não tranca; deixar o
- * celular em cima da mesa e alguém pegá-lo depois, tranca.
+ * Então: pede na abertura, e não pede mais nada até a próxima abertura.
  */
-const TOLERANCIA_MS = 2 * 60 * 1000;
-
-type BloqueioStore = {
-  trancado: boolean;
-  /** Momento em que o app saiu do primeiro plano. null = está em uso. */
-  saiuEm: number | null;
-
-  trancar: () => void;
-  destrancar: () => void;
-  /** Só tranca se o bloqueio estiver ligado nas configurações. */
-  trancarSeConfigurado: () => Promise<void>;
-  aoSair: () => void;
-  aoVoltar: () => Promise<void>;
+type EntradaStore = {
+  /** True enquanto a confirmação da abertura não passou. */
+  aguardandoEntrada: boolean;
+  /** Marca que já entrou nesta execução do app. */
+  liberar: () => void;
+  /** Chamado uma vez na partida: só exige se o usuário ativou a biometria. */
+  avaliarNaAbertura: () => Promise<void>;
+  /** Sessão encerrada: a próxima abertura volta a perguntar. */
+  reiniciar: () => void;
 };
 
-export const useBloqueioStore = create<BloqueioStore>((set, get) => ({
-  trancado: false,
-  saiuEm: null,
+export const useBloqueioStore = create<EntradaStore>((set) => ({
+  aguardandoEntrada: false,
 
-  trancar: () => set({ trancado: true, saiuEm: null }),
-  destrancar: () => set({ trancado: false, saiuEm: null }),
+  liberar: () => set({ aguardandoEntrada: false }),
+  reiniciar: () => set({ aguardandoEntrada: false }),
 
-  async trancarSeConfigurado() {
-    if (await bloqueioAtivo()) set({ trancado: true, saiuEm: null });
-  },
-
-  aoSair: () => {
-    if (!get().trancado) set({ saiuEm: Date.now() });
-  },
-
-  async aoVoltar() {
-    const { saiuEm, trancado } = get();
-    set({ saiuEm: null });
-    if (trancado || saiuEm === null) return;
-    if (Date.now() - saiuEm < TOLERANCIA_MS) return;
-    if (await bloqueioAtivo()) set({ trancado: true });
+  async avaliarNaAbertura() {
+    set({ aguardandoEntrada: await bloqueioAtivo() });
   },
 }));

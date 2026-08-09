@@ -58,12 +58,12 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
 
       <Text style={styles.titulo}>
         {tentando
-          ? 'Desbloqueando…'
+          ? 'Entrando…'
           : falha === 'sem_trava_no_aparelho'
             ? 'Este celular não tem trava'
             : falha === 'recusado'
               ? 'Não reconhecemos'
-              : 'Sentinela bloqueado'}
+              : 'Bem-vindo de volta'}
       </Text>
 
       {/* O caso `sem_trava_no_aparelho` é novo, e antes ele não existia porque
@@ -75,14 +75,12 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
           ? 'A digital e o PIN foram removidos das configurações do Android. Cadastre uma das duas para voltar a entrar, ou use outra conta abaixo.'
           : falha === 'recusado'
             ? 'Tente de novo, ou use o PIN do aparelho quando ele oferecer.'
-            : 'Sua sessão continua ativa. Confirme que é você para entrar.'}
+            : 'Sua sessão continua ativa. Confirme que é você e entre — sem link por e-mail.'}
       </Text>
 
       <View style={styles.acoes}>
         <Pressable style={styles.primario} onPress={tentar} disabled={tentando}>
-          <Text style={styles.primarioLabel}>
-            {tentando ? 'Aguardando…' : 'Desbloquear'}
-          </Text>
+          <Text style={styles.primarioLabel}>{tentando ? 'Aguardando…' : 'Entrar'}</Text>
         </Pressable>
 
         {/* Saída de emergência: sem isto, quem trocou de aparelho ou perdeu a
