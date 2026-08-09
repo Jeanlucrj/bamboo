@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
 import { CHECKIN_PRESETS } from '@sentinela/shared';
+import { Identidade } from '../../src/components/Identidade';
 import { useSessionStore } from '../../src/stores/session';
 import { supabase } from '../../src/services/supabase';
 import {
@@ -112,6 +113,7 @@ export default function ViagemScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Identidade />
       <Text style={styles.h1}>{session.title}</Text>
 
       <Text style={styles.sectionLabel}>SE EU FICAR SEM DAR SINAL POR</Text>

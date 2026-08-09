@@ -30,6 +30,7 @@ import { TelaBloqueio } from '../src/components/TelaBloqueio';
 import { stopBackgroundTracking } from '../src/services/location/backgroundLocation';
 import { useSessionStore } from '../src/stores/session';
 import { useBloqueioStore } from '../src/stores/bloqueio';
+import { usePerfilStore } from '../src/stores/perfil';
 import { ThemeProvider, useColors, useTheme } from '../src/theme';
 
 export default function RootLayout() {
@@ -157,6 +158,11 @@ function RootNavigator() {
     // load() nunca acontecia. A Home ficava em "Carregando…" para sempre, sem
     // erro nenhum, por causa de algo que ela nem usa.
     useSessionStore.getState().load();
+
+    // Nome e país do cabeçalho. Separado do load() da viagem de propósito: o
+    // perfil quase nunca muda, e recarregá-lo a cada sinal de vida faria a
+    // identidade piscar no topo de quatro telas.
+    usePerfilStore.getState().carregar();
 
     // Push e registro de aparelho em paralelo, isolados. São importantes — o
     // device_id carimba os sinais e o push entrega o aviso antes do alerta —

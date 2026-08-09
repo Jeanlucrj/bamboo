@@ -5,6 +5,7 @@ import { stopBackgroundTracking } from '../../src/services/location/backgroundLo
 import { revokeThisDevice } from '../../src/services/device';
 import { bloqueioAtivo } from '../../src/services/bloqueio';
 import { useBloqueioStore } from '../../src/stores/bloqueio';
+import { Identidade } from '../../src/components/Identidade';
 import { spacing, type as typo, useColors, useTheme } from '../../src/theme';
 import { Tela, Cartao, Linha, Rotulo } from '../../src/components/Ui';
 
@@ -67,6 +68,7 @@ export default function PerfilScreen() {
   return (
     <Tela>
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+        <Identidade />
         <Rotulo>Segurança</Rotulo>
         <Cartao>
           <Linha

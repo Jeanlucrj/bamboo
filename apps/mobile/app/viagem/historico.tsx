@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, View, Text, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import type { TripHistoryItem } from '@sentinela/shared';
+import { bandeiraEmoji, type TripHistoryItem } from '@sentinela/shared';
 
 import { useTripHistory } from '../../src/hooks/useTravelStats';
 import { spacing, radius, type as typo, useColors } from '../../src/theme';
@@ -122,7 +122,7 @@ function CartaoViagem({ viagem }: { viagem: TripHistoryItem }) {
       <Pressable onPress={() => setAberto((v) => !v)} style={{ padding: spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <Ladrilho
-            glifo={paises.length ? bandeira(paises[0]) : '🧭'}
+            glifo={paises.length ? bandeiraEmoji(paises[0]) : '🧭'}
             cor={emAndamento ? c.safe : c.brandLight}
             tamanho={44}
           />
@@ -159,7 +159,7 @@ function CartaoViagem({ viagem }: { viagem: TripHistoryItem }) {
               rotulo="Países"
               valor={
                 paises.length
-                  ? paises.map((p) => `${bandeira(p)} ${p}`).join('   ')
+                  ? paises.map((p) => `${bandeiraEmoji(p)} ${p}`).join('   ')
                   : 'nenhum registrado'
               }
             />
@@ -223,12 +223,6 @@ function formatarKm(km: number): string {
   if (km >= 1000) return `${(km / 1000).toFixed(1)}k`;
   if (km >= 10) return String(Math.round(km));
   return km.toFixed(1).replace(/\.0$/, '');
-}
-
-/** ISO-3166-1 alpha-2 -> emoji de bandeira, via Regional Indicators. */
-function bandeira(cc: string | null): string {
-  if (!cc || cc.length !== 2) return '🏳️';
-  return String.fromCodePoint(...[...cc.toUpperCase()].map((x) => 0x1f1a5 + x.charCodeAt(0)));
 }
 
 function periodo(inicio: string | null, fim: string | null): string {

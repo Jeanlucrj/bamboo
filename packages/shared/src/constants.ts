@@ -258,3 +258,19 @@ export const PLANS = {
   organizacao: { name: 'Organização', price: 24, currency: 'BRL', interval: 'month', perSeat: true },
 } as const;
 export type PlanId = keyof typeof PLANS;
+
+/**
+ * ISO-3166-1 alpha-2 -> emoji de bandeira.
+ *
+ * Os Regional Indicator Symbols ocupam o bloco a partir de U+1F1E6 para 'A'.
+ * Somando o deslocamento de cada letra sai o par que o sistema operacional
+ * desenha como bandeira — sem tabela de 250 países e sem baixar imagem.
+ *
+ * Estava copiado em três telas com nomes diferentes (`flagEmoji`, `bandeira`).
+ */
+export function bandeiraEmoji(cc: string | null | undefined): string {
+  if (!cc || cc.length !== 2) return '🏳️';
+  return String.fromCodePoint(
+    ...[...cc.toUpperCase()].map((letra) => 0x1f1a5 + letra.charCodeAt(0)),
+  );
+}

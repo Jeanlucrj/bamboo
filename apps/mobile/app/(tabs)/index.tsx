@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SIGNAL_LABEL } from '@sentinela/shared';
 
+import { Identidade } from '../../src/components/Identidade';
 import { StatusRing } from '../../src/components/StatusRing';
 import { CheckinButton } from '../../src/components/CheckinButton';
 import { PanicButton } from '../../src/components/PanicButton';
@@ -79,7 +80,12 @@ export default function HomeScreen() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        {/* Também no estado vazio: é a tela que mais aparece para quem está em
+            casa, e sem ela a identidade sumiria justamente ali. */}
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
+          <Identidade />
+        </View>
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Nenhuma viagem ativa</Text>
           <Text style={styles.emptyBody}>
@@ -102,6 +108,7 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brandLight} />
         }
       >
+        <Identidade />
         <Text style={styles.tripTitle}>{session.title}</Text>
         {session.destination_label ? (
           <Text style={styles.tripSub}>{session.destination_label}</Text>

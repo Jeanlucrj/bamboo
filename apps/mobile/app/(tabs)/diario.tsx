@@ -1,6 +1,9 @@
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { bandeiraEmoji } from '@sentinela/shared';
+
+import { Identidade } from '../../src/components/Identidade';
 import { StatCard } from '../../src/components/StatCard';
 import { useTravelStats, useCountryVisits, useTripHistory } from '../../src/hooks/useTravelStats';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
@@ -52,6 +55,7 @@ export default function DiarioScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
+        <Identidade />
         <Text style={styles.title}>Diário de bordo</Text>
         <Text style={styles.subtitle}>
           Escrito sozinho a partir do seu GPS e dos seus check-ins.
@@ -95,7 +99,7 @@ export default function DiarioScreen() {
                 {s.countries_count === 1 ? 'país visitado' : 'países visitados'}
               </Text>
               <Text style={styles.mapFlags}>
-                {s.countries.slice(0, 12).map(flagEmoji).join('  ')}
+                {s.countries.slice(0, 12).map(bandeiraEmoji).join('  ')}
                 {s.countries.length > 12 ? `  +${s.countries.length - 12}` : ''}
               </Text>
             </View>
@@ -135,7 +139,7 @@ export default function DiarioScreen() {
             ) : (
               visits.slice(0, 30).map((v, i) => (
                 <View key={`${v.country_code}-${v.entered_at}-${i}`} style={styles.timelineRow}>
-                  <Text style={styles.timelineFlag}>{flagEmoji(v.country_code)}</Text>
+                  <Text style={styles.timelineFlag}>{bandeiraEmoji(v.country_code)}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.timelineCountry}>{v.country_code}</Text>
                     <Text style={styles.timelineDates}>
@@ -160,12 +164,6 @@ export default function DiarioScreen() {
 function formatKm(km: number): string {
   if (km >= 1000) return `${(km / 1000).toFixed(1)}k`;
   return String(Math.round(km));
-}
-
-/** Converte ISO-3166-1 alpha-2 no emoji de bandeira via Regional Indicators. */
-function flagEmoji(cc: string): string {
-  if (!cc || cc.length !== 2) return '🏳️';
-  return String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)));
 }
 
 function fmt(iso: string): string {
