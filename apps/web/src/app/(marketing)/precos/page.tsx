@@ -58,14 +58,22 @@ export default function PrecosPage() {
       <section className="border-b border-slate-800 py-20">
         <div className="mx-auto max-w-3xl px-6">
           <div className="rounded-2xl border border-amber-900/60 bg-amber-950/20 p-8">
+            {/* Este bloco dizia "onde o plano gratuito não protege" e listava
+                os cortes do antigo Explorador. Não existem mais: o teste é o
+                produto inteiro. O que ficou é o único limite real — e explicar
+                o porquê dele vale mais do que anunciar o preço. */}
             <h2 className="text-lg font-bold text-white">
-              Onde o plano gratuito não protege
+              Por que 2 viagens, e não 30 dias
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-400">
-              No Explorador, o cronômetro só zera quando você toca no botão. Se você esquecer, o
-              alarme dispara e sua família é acionada sem motivo — e falso positivo é o que faz
-              alguém desinstalar o app. O check-in passivo por deslocamento existe justamente para
-              você não precisar lembrar de nada, e ele é o divisor entre os planos.
+              Um teste por tempo penaliza quem viaja pouco: os 30 dias correm com a pessoa em casa
+              e acabam antes de ela sair. Aqui a conta só anda quando você usa — se a próxima
+              viagem for daqui a seis meses, ela continua de graça esperando por você.
+            </p>
+            <p className="mt-3 text-[15px] leading-relaxed text-slate-400">
+              E o teste não é uma versão capada. Você tem check-in passivo, contatos ilimitados,
+              Dossiê de Emergência e escalonamento completo desde a primeira viagem. Julgar o
+              produto por uma versão que não protege não ajudaria ninguém a decidir.
             </p>
           </div>
         </div>

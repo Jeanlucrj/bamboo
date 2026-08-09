@@ -252,12 +252,53 @@ export const HEALTH_THRESHOLDS = {
 // ---------------------------------------------------------------------
 // Planos
 // ---------------------------------------------------------------------
+/**
+ * Quantas viagens a conta faz de graça, para sempre.
+ *
+ * Contagem VITALÍCIA e por viagem CRIADA — não por mês, não por concluída.
+ * "Testar em 2 viagens" é sobre experimentar o produto, e uma viagem criada já
+ * libera tudo: rastreamento, dossiê, contatos, escalonamento. Contar só as
+ * concluídas deixaria o teste infinito para quem nunca encerra.
+ *
+ * Quem faz valer é o gatilho `limite_viagens_gratis` no banco. Este número
+ * existe para a tela dizer a mesma coisa que o servidor — se divergirem, a
+ * pessoa descobre o limite só no erro, depois de preencher o formulário.
+ */
+export const VIAGENS_GRATIS = 2;
+
+/**
+ * Um degrau, não uma escada.
+ *
+ * A versão anterior tinha três planos (Explorador grátis / Nômade R$19 /
+ * Organização R$24 por assento). Virou: teste com 2 viagens e depois um preço
+ * só.
+ *
+ * `price` em reais e não em centavos porque é o número que a tela mostra. O
+ * gateway recebe centavos, e a conversão fica na borda que fala com ele — um
+ * lugar só, em vez de todo componente lembrar de dividir por 100.
+ */
 export const PLANS = {
-  explorador: { name: 'Explorador', price: 0, currency: 'BRL', interval: 'month' },
-  nomade: { name: 'Nômade', price: 19, currency: 'BRL', interval: 'month' },
-  organizacao: { name: 'Organização', price: 24, currency: 'BRL', interval: 'month', perSeat: true },
+  gratuito: {
+    name: 'Teste',
+    price: 0,
+    currency: 'BRL',
+    interval: 'month',
+    resumo: `${VIAGENS_GRATIS} viagens para conhecer, sem cartão.`,
+  },
+  sentinela: {
+    name: 'Sentinela',
+    price: 49.9,
+    currency: 'BRL',
+    interval: 'month',
+    resumo: 'Viagens ilimitadas, monitoramento contínuo e Dossiê de Emergência.',
+  },
 } as const;
 export type PlanId = keyof typeof PLANS;
+
+/** "49,90" — vírgula decimal, sem o símbolo, para a tela compor como quiser. */
+export function formatarPreco(reais: number): string {
+  return reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 /**
  * ISO-3166-1 alpha-2 -> emoji de bandeira.

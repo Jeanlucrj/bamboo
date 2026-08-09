@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, ScrollView, StyleSheet, Pressable, Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CHECKIN_PRESETS, travelSessionInput } from '@sentinela/shared';
+import { CHECKIN_PRESETS, travelSessionInput, VIAGENS_GRATIS } from '@sentinela/shared';
 
 import { supabase } from '../../src/services/supabase';
 import { useSessionStore } from '../../src/stores/session';
@@ -91,6 +91,22 @@ export default function NovaViagem() {
 
     if (error || !data) {
       setSaving(false);
+
+      // A trava do banco chega aqui como texto. Traduzir importa: "limite
+      // gratuito atingido" não diz o que fazer, e a pessoa acabou de preencher
+      // o formulário inteiro.
+      if (String(error?.message ?? '').includes('limite_gratuito_atingido')) {
+        Alert.alert(
+          'Suas viagens gratuitas acabaram',
+          `Você já usou as ${VIAGENS_GRATIS} viagens do teste. Suas viagens anteriores, contatos e dossiê continuam salvos — para iniciar uma nova, assine.`,
+          [
+            { text: 'Agora não', style: 'cancel' },
+            { text: 'Ver planos', onPress: () => router.replace('/perfil/assinatura') },
+          ],
+        );
+        return;
+      }
+
       Alert.alert('Não foi possível criar a viagem', error?.message ?? 'Tente novamente.');
       return;
     }

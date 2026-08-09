@@ -153,53 +153,69 @@ export const faq = [
   },
 ] as const;
 
+/**
+ * Planos.
+ *
+ * Saiu a escada de três níveis (grátis capado / R$19 / R$24 por assento) e
+ * entrou um degrau só: 2 viagens completas de graça, depois R$ 49,90/mês.
+ *
+ * A diferença de fundo é o que o grátis significa. Antes era uma versão
+ * mutilada — 1 contato, sem check-in passivo, 24 h de histórico —, o que pede
+ * para a pessoa julgar o produto pela versão que não protege. Agora é o
+ * produto inteiro, por duas viagens: ela testa a coisa real e decide sabendo o
+ * que está comprando.
+ *
+ * Os `id` continuam os antigos de propósito. São chave de layout (highlight,
+ * colunas da comparação) e trocá-los espalharia edição por três componentes
+ * sem mudar nada do que o usuário lê.
+ */
 export const pricing = {
   title: 'Planos',
   anchor:
-    'R$ 19/mês. Menos que uma diária de hostel. Muito menos que o custo de ninguém saber onde te procurar.',
+    'Duas viagens completas de graça, sem cartão. Depois R$ 49,90/mês — menos que uma diária de hostel, e muito menos que o custo de ninguém saber onde te procurar.',
   plans: [
     {
       id: 'explorador',
-      name: 'Explorador',
+      name: 'Teste',
       price: 'Grátis',
-      period: '',
+      period: '2 viagens',
       highlight: false,
       cta: 'Criar conta',
       features: [
-        '1 contato de emergência',
-        'Check-in manual',
-        'GPS com 24h de histórico',
-        'Travel Analytics básico',
-        'Alertas por e-mail',
-        'Botão de pânico',
+        'O produto completo, sem cortes',
+        'Contatos de emergência ilimitados',
+        'Check-in passivo por deslocamento',
+        'Dossiê de Emergência e botão de pânico',
+        'Diário de bordo com países e quilômetros',
+        'Sem cartão de crédito',
       ],
     },
     {
       id: 'nomade',
-      name: 'Nômade',
-      price: 'R$ 19',
+      name: 'Sentinela',
+      price: 'R$ 49,90',
       period: '/mês',
       highlight: true,
-      badge: 'Mais escolhido',
-      cta: 'Começar 30 dias grátis',
+      badge: 'Depois do teste',
+      cta: 'Assinar',
       features: [
-        'Contatos ilimitados',
-        'Check-in passivo por deslocamento',
-        'GPS com histórico ilimitado',
-        'Travel Analytics completo + export',
-        'Alertas por SMS e WhatsApp',
-        'Botão de pânico',
+        'Viagens ilimitadas',
+        'Tudo que já vem no teste',
+        'Histórico de GPS sem limite de tempo',
+        'Escalonamento automático completo',
+        'Cancele quando quiser',
+        'Seu histórico permanece se cancelar',
       ],
     },
     {
       id: 'organizacao',
       name: 'Organização',
-      price: 'R$ 24',
-      period: '/viajante/mês',
+      price: 'Sob consulta',
+      period: '',
       highlight: false,
       cta: 'Falar com vendas',
       features: [
-        'Tudo do Nômade',
+        'Tudo do Sentinela para cada viajante',
         'Painel de equipe com semáforo',
         'Relatórios de compliance',
         'Protocolos de escalonamento personalizados',
@@ -233,13 +249,27 @@ export const pricingComparison: {
 } = {
   columns: ['explorador', 'nomade', 'organizacao'],
   groups: [
+    // A ÚNICA linha em que os planos diferem para quem viaja sozinho.
+    //
+    // O modelo antigo cortava recursos no grátis — sem check-in passivo, 1
+    // contato, 24 h de histórico. O novo não corta nada: dá o produto inteiro
+    // por 2 viagens. Nesta tabela isso vira quase tudo ✓ nas duas colunas, e é
+    // exatamente a mensagem certa. Manter os cortes antigos aqui seria vender
+    // um produto e entregar outro.
+    {
+      title: 'Uso',
+      rows: [
+        { label: 'Viagens monitoradas', values: ['2 no total', 'ilimitadas', 'ilimitadas'] },
+        { label: 'Precisa de cartão para testar', values: ['não', '—', '—'] },
+      ],
+    },
     {
       title: 'Dead Man’s Switch',
       rows: [
         { label: 'Check-in manual', values: [true, true, true] },
-        { label: 'Check-in passivo por deslocamento', values: [false, true, true] },
+        { label: 'Check-in passivo por deslocamento', values: [true, true, true] },
         { label: 'Abertura do app como sinal de vida', values: [true, true, true] },
-        { label: 'Intervalo de check-in configurável', values: ['24h fixo', '1h a 30 dias', '1h a 30 dias'] },
+        { label: 'Intervalo de check-in configurável', values: ['1h a 30 dias', '1h a 30 dias', '1h a 30 dias'] },
         { label: 'Botão de pânico (SOS)', values: [true, true, true] },
         { label: 'SOS por SMS nativo sem internet', values: [true, true, true] },
       ],
@@ -247,9 +277,9 @@ export const pricingComparison: {
     {
       title: 'Contatos e alertas',
       rows: [
-        { label: 'Contatos de emergência', values: ['1', 'ilimitados', 'ilimitados'] },
+        { label: 'Contatos de emergência', values: ['ilimitados', 'ilimitados', 'ilimitados'] },
         { label: 'Alerta por e-mail', values: [true, true, true] },
-        { label: 'Alerta por SMS e WhatsApp', values: [false, true, true] },
+        { label: 'Alerta por SMS e WhatsApp', values: [true, true, true] },
         { label: 'Dossiê de Emergência com dados médicos', values: [true, true, true] },
         { label: 'Protocolo de escalonamento personalizado', values: [false, false, true] },
       ],
@@ -257,10 +287,10 @@ export const pricingComparison: {
     {
       title: 'Localização e diário',
       rows: [
-        { label: 'Histórico de GPS', values: ['24 horas', 'ilimitado', 'ilimitado'] },
-        { label: 'Travel Analytics', values: ['básico', 'completo', 'completo'] },
-        { label: 'Exportar dados', values: [false, true, true] },
-        { label: 'Mapa de países e timeline', values: [false, true, true] },
+        { label: 'Histórico de GPS', values: ['ilimitado', 'ilimitado', 'ilimitado'] },
+        { label: 'Travel Analytics', values: ['completo', 'completo', 'completo'] },
+        { label: 'Exportar dados', values: [true, true, true] },
+        { label: 'Mapa de países e timeline', values: [true, true, true] },
       ],
     },
     {
@@ -279,7 +309,7 @@ export const pricingComparison: {
 export const pricingFaq = [
   {
     q: 'Preciso de cartão de crédito para testar?',
-    a: 'Não. Os 30 dias do plano Nômade começam sem cartão. Se você não assinar ao fim do período, a conta cai para o Explorador — nada é apagado, você só perde o check-in passivo e os alertas por SMS.',
+    a: 'Não. As duas primeiras viagens são de graça e não pedem cartão — e não são uma versão capada: você usa o produto inteiro, com check-in passivo, contatos ilimitados e Dossiê de Emergência. A cobrança só aparece quando você for criar a terceira viagem.',
   },
   {
     q: 'O plano grátis realmente protege?',
@@ -291,7 +321,7 @@ export const pricingFaq = [
   },
   {
     q: 'Posso cancelar quando quiser?',
-    a: 'Sim, em um clique, sem falar com ninguém. O acesso continua até o fim do período já pago e a conta volta para o Explorador. Se preferir, você também pode apagar tudo — histórico de GPS incluído.',
+    a: 'Sim, em um clique, sem falar com ninguém. O acesso continua até o fim do período já pago e depois a conta volta ao modo gratuito. Nada é apagado: viagens anteriores, contatos, dossiê e diário de bordo permanecem — você só não inicia viagens novas. Se preferir, também pode apagar tudo, histórico de GPS incluído.',
   },
   {
     q: 'O que acontece com meu histórico se eu cancelar?',

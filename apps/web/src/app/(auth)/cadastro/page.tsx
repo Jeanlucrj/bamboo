@@ -20,7 +20,7 @@ export default async function CadastroPage({
     <>
       <h1 className="text-2xl font-bold text-white">Criar conta</h1>
       <p className="mt-2 text-sm text-slate-400">
-        30 dias grátis. Sem cartão de crédito.
+        2 viagens completas de graça. Sem cartão de crédito.
       </p>
 
       <div className="mt-6">

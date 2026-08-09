@@ -950,10 +950,11 @@ export type Database = {
           id: string
           org_id: string | null
           plan: string
+          provider: string
+          provider_customer_id: string | null
+          provider_sub_id: string | null
           seats: number
           status: string
-          stripe_customer_id: string | null
-          stripe_sub_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -963,10 +964,11 @@ export type Database = {
           id?: string
           org_id?: string | null
           plan: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_sub_id?: string | null
           seats?: number
           status: string
-          stripe_customer_id?: string | null
-          stripe_sub_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -976,10 +978,11 @@ export type Database = {
           id?: string
           org_id?: string | null
           plan?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_sub_id?: string | null
           seats?: number
           status?: string
-          stripe_customer_id?: string | null
-          stripe_sub_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1399,6 +1402,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      meu_plano: {
+        Args: never
+        Returns: {
+          assinante: boolean
+          plano: string
+          pode_criar: boolean
+          renova_em: string
+          status: string
+          viagens_gratis: number
+          viagens_usadas: number
+        }[]
+      }
       open_alert: {
         Args: {
           p_level: Database["public"]["Enums"]["safety_state"]
@@ -1502,6 +1517,7 @@ export type Database = {
         Returns: boolean
       }
       revoke_device: { Args: { p_device_id: string }; Returns: boolean }
+      tem_assinatura_ativa: { Args: { p_user?: string }; Returns: boolean }
     }
     Enums: {
       contact_channel: "email" | "sms" | "whatsapp" | "push"
