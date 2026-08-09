@@ -199,7 +199,7 @@ export function Botao({
 }
 
 export function Linha({
-  label, valor, onPress, destrutivo, ultima, glifo, cor, descricao,
+  label, valor, onPress, destrutivo, ultima, glifo, cor, descricao, marcado,
 }: {
   label: string;
   valor?: string;
@@ -209,8 +209,23 @@ export function Linha({
   glifo?: string;
   cor?: string;
   descricao?: string;
+  /**
+   * Linha de ESCOLHA, não de navegação.
+   *
+   * `undefined` mantém o comportamento antigo — chevron, "vai para outro
+   * lugar". `true`/`false` trocam o chevron por um marcador de seleção e
+   * destacam a opção ativa.
+   *
+   * A distinção existe porque a tela de Aparência usava a linha de navegação
+   * para escolher tema: cada opção aparecia com a seta `›`, como se levasse a
+   * outra tela, e a marca de selecionado era um "✓" cinza no lugar do valor —
+   * do mesmo tamanho e cor de um texto secundário. Dava para trocar o tema e
+   * não perceber qual estava valendo.
+   */
+  marcado?: boolean;
 }) {
   const c = useColors();
+  const ehEscolha = marcado !== undefined;
 
   const conteudo = ({ pressed }: { pressed: boolean }) => (
     <View
@@ -222,13 +237,19 @@ export function Linha({
         paddingHorizontal: spacing.md,
         borderBottomWidth: ultima ? 0 : 1,
         borderBottomColor: c.border,
-        backgroundColor: pressed ? c.surfaceAlt : 'transparent',
+        backgroundColor: pressed || marcado ? c.surfaceAlt : 'transparent',
       }}
     >
       {glifo ? <Ladrilho glifo={glifo} cor={destrutivo ? c.alert : cor} tamanho={40} /> : null}
 
       <View style={{ flex: 1 }}>
-        <Text style={{ ...typo.body, color: destrutivo ? c.alert : c.text, fontWeight: '600' }}>
+        <Text
+          style={{
+            ...typo.body,
+            color: destrutivo ? c.alert : c.text,
+            fontWeight: marcado ? '800' : '600',
+          }}
+        >
           {label}
         </Text>
         {descricao ? (
@@ -241,7 +262,27 @@ export function Linha({
       {valor ? (
         <Text style={{ ...typo.small, color: c.textMuted, fontWeight: '600' }}>{valor}</Text>
       ) : null}
-      {onPress ? (
+
+      {ehEscolha ? (
+        // Círculo cheio na cor da marca: lê como escolha à distância, ao
+        // contrário do "✓" cinza que se confundia com texto secundário.
+        <View
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 11,
+            borderWidth: 2,
+            borderColor: marcado ? c.brandLight : c.border,
+            backgroundColor: marcado ? c.brandLight : 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {marcado ? (
+            <Text style={{ fontSize: 12, color: c.bg, fontWeight: '900', lineHeight: 14 }}>✓</Text>
+          ) : null}
+        </View>
+      ) : onPress ? (
         <Text style={{ fontSize: 20, color: c.textFaint, marginLeft: 2 }}>›</Text>
       ) : null}
     </View>

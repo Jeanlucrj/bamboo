@@ -19,7 +19,7 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
   onSair: () => void;
 }) {
   const [tentando, setTentando] = useState(true);
-  const [falhou, setFalhou] = useState(false);
+  const [falha, setFalha] = useState<'recusado' | 'sem_trava_no_aparelho' | null>(null);
   const pulso = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -33,11 +33,11 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
 
   async function tentar() {
     setTentando(true);
-    setFalhou(false);
-    const ok = await pedirBiometria('Desbloqueie o Sentinela');
+    setFalha(null);
+    const r = await pedirBiometria('Desbloqueie o Sentinela');
     setTentando(false);
-    if (ok) onDesbloquear();
-    else setFalhou(true);
+    if (r.ok) onDesbloquear();
+    else setFalha(r.motivo);
   }
 
   useEffect(() => {
@@ -57,12 +57,25 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
       </View>
 
       <Text style={styles.titulo}>
-        {tentando ? 'Desbloqueando…' : falhou ? 'Não reconhecemos' : 'Sentinela bloqueado'}
+        {tentando
+          ? 'Desbloqueando…'
+          : falha === 'sem_trava_no_aparelho'
+            ? 'Este celular não tem trava'
+            : falha === 'recusado'
+              ? 'Não reconhecemos'
+              : 'Sentinela bloqueado'}
       </Text>
+
+      {/* O caso `sem_trava_no_aparelho` é novo, e antes ele não existia porque
+          simplesmente destrancava. Se a pessoa removeu a digital e o PIN
+          depois de ligar o bloqueio, não há nada a conferir — e a saída
+          honesta é dizer isso e mandar recadastrar, não abrir sozinho. */}
       <Text style={styles.corpo}>
-        {falhou
-          ? 'Tente de novo, ou use o PIN do aparelho quando ele oferecer.'
-          : 'Sua sessão continua ativa. Confirme que é você para entrar.'}
+        {falha === 'sem_trava_no_aparelho'
+          ? 'A digital e o PIN foram removidos das configurações do Android. Cadastre uma das duas para voltar a entrar, ou use outra conta abaixo.'
+          : falha === 'recusado'
+            ? 'Tente de novo, ou use o PIN do aparelho quando ele oferecer.'
+            : 'Sua sessão continua ativa. Confirme que é você para entrar.'}
       </Text>
 
       <View style={styles.acoes}>

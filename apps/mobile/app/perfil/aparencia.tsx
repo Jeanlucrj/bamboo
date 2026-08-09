@@ -34,12 +34,17 @@ export default function Aparencia() {
             <Linha
               key={o.id}
               label={o.label}
-              valor={pref === o.id ? '✓' : undefined}
+              descricao={o.desc}
+              marcado={pref === o.id}
               onPress={() => setPref(o.id)}
               ultima={i === OPCOES.length - 1}
             />
           ))}
         </Cartao>
+
+        {/* A descrição de cada opção estava definida em OPCOES e nunca chegava
+            à tela: as três linhas apareciam só com "Escuro", "Claro" e "Seguir
+            o sistema", sem dizer o que muda. */}
 
         <Rotulo>Por que isso importa aqui</Rotulo>
         <Paragrafo>

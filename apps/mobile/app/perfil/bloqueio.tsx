@@ -1,37 +1,48 @@
-import { useEffect, useState } from 'react';
-import { ScrollView, View, Switch, Alert } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, View, Text, Switch, Alert, Linking } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import {
   verificarDisponibilidade, bloqueioAtivo, definirBloqueio, pedirBiometria,
   type Disponibilidade,
 } from '../../src/services/bloqueio';
-import { spacing, useColors } from '../../src/theme';
-import { Tela, Cartao, Linha, Rotulo, Paragrafo, Aviso } from '../../src/components/Ui';
-
-const NOME = {
-  facial: 'Reconhecimento facial',
-  digital: 'Digital',
-  iris: 'Íris',
-  outro: 'Biometria',
-} as const;
+import { useBloqueioStore } from '../../src/stores/bloqueio';
+import { spacing, type as typo, useColors } from '../../src/theme';
+import { Tela, Cartao, Rotulo, Paragrafo, Aviso, Botao } from '../../src/components/Ui';
 
 export default function ConfigBloqueio() {
   const c = useColors();
   const [disp, setDisp] = useState<Disponibilidade | null>(null);
   const [ativo, setAtivo] = useState(false);
+  const trancar = useBloqueioStore((s) => s.trancar);
 
-  useEffect(() => {
-    verificarDisponibilidade().then(setDisp);
-    bloqueioAtivo().then(setAtivo);
-  }, []);
+  /**
+   * Recarrega A CADA FOCO, e não uma vez ao montar.
+   *
+   * O caminho normal desta tela é: a pessoa descobre que não tem digital
+   * cadastrada, sai para os Ajustes do Android, cadastra e volta. Com
+   * `useEffect(..., [])` ela voltava para a mesma tela dizendo que não dá,
+   * porque o estado tinha sido lido antes.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      verificarDisponibilidade().then(setDisp);
+      bloqueioAtivo().then(setAtivo);
+    }, []),
+  );
 
   async function alternar(valor: boolean) {
     if (valor) {
       // Confirma ANTES de ligar. Ligar sem testar é como trocar a fechadura
       // sem experimentar a chave — o usuário só descobriria que não funciona
       // ao ficar trancado do lado de fora.
-      const ok = await pedirBiometria('Confirme para ativar o bloqueio');
-      if (!ok) {
-        Alert.alert('Não ativamos', 'A confirmação não passou. Tente de novo.');
+      const r = await pedirBiometria('Confirme para ativar o bloqueio');
+      if (!r.ok) {
+        Alert.alert(
+          'Não ativamos',
+          r.motivo === 'sem_trava_no_aparelho'
+            ? 'Este celular não tem digital nem PIN cadastrados. Configure um dos dois no Android primeiro.'
+            : 'A confirmação não passou. Tente de novo.',
+        );
         return;
       }
     }
@@ -39,28 +50,33 @@ export default function ConfigBloqueio() {
     setAtivo(valor);
   }
 
-  const indisponivel = disp && !disp.disponivel;
+  const indisponivel = disp !== null && !disp.disponivel;
 
   return (
     <Tela>
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
         <Rotulo>Bloqueio do app</Rotulo>
 
-        <Cartao>
-          <Linha
-            glifo="🔒"
-            cor={c.brandLight}
-            label={disp?.disponivel ? NOME[disp.tipo] : 'Biometria'}
-            descricao={
-              indisponivel
-                ? disp!.motivo === 'sem_hardware'
-                  ? 'Este aparelho não tem sensor'
-                  : 'Cadastre uma digital ou rosto nos Ajustes do sistema'
-                : 'Exigir ao abrir o app'
-            }
-            ultima
-          />
-          <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.md, alignItems: 'flex-end' }}>
+        {/* O Switch agora fica DENTRO da linha, alinhado ao rótulo. Antes ele
+            morava num bloco solto abaixo do cartão, o que fazia parecer que
+            pertencia ao texto seguinte e não à opção. */}
+        <Cartao padding={spacing.md}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...typo.body, color: c.text, fontWeight: '700' }}>
+                {disp?.disponivel ? disp.rotulo : 'Biometria'}
+              </Text>
+              <Text style={{ ...typo.caption, color: c.textMuted, marginTop: 3, lineHeight: 17 }}>
+                {disp === null
+                  ? 'Verificando o aparelho…'
+                  : disp.disponivel
+                    ? 'Pedir ao abrir o app'
+                    : disp.motivo === 'sem_hardware'
+                      ? 'Este aparelho não tem sensor biométrico'
+                      : 'Nenhuma digital, rosto ou PIN cadastrado no Android'}
+              </Text>
+            </View>
+
             <Switch
               value={ativo}
               disabled={!disp?.disponivel}
@@ -71,10 +87,51 @@ export default function ConfigBloqueio() {
           </View>
         </Cartao>
 
+        {/* Sem trava no aparelho não adianta explicar o produto: o caminho é
+            sair para os Ajustes do sistema. O botão leva direto. */}
+        {indisponivel && disp.motivo === 'sem_cadastro' ? (
+          <>
+            <View style={{ height: spacing.md }} />
+            <Botao
+              label="Abrir Ajustes do Android"
+              tom="neutro"
+              onPress={() => Linking.openSettings()}
+            />
+            <View style={{ height: spacing.sm }} />
+            <Paragrafo>
+              Cadastre uma digital, o rosto ou um PIN em Segurança. Ao voltar, esta tela reconhece
+              sozinha.
+            </Paragrafo>
+          </>
+        ) : null}
+
+        {/* Testar sem sair da tela: é o que transforma "liguei e torço para
+            funcionar" em "vi funcionando". */}
+        {ativo && disp?.disponivel ? (
+          <>
+            <View style={{ height: spacing.md }} />
+            <Botao
+              label="Testar agora"
+              tom="neutro"
+              onPress={async () => {
+                const r = await pedirBiometria('Teste do bloqueio do Sentinela');
+                Alert.alert(
+                  r.ok ? 'Funcionou' : 'Não passou',
+                  r.ok
+                    ? 'É exatamente isto que vai aparecer quando você abrir o app.'
+                    : 'A confirmação não passou. Se isso se repetir, desligue o bloqueio antes de sair do app.',
+                );
+              }}
+            />
+            <View style={{ height: spacing.sm }} />
+            <Botao label="Bloquear o app agora" tom="neutro" onPress={trancar} />
+          </>
+        ) : null}
+
         <Rotulo>Por que isto existe</Rotulo>
         <Paragrafo>
           Com o bloqueio ligado, sair do app deixa de exigir link novo por e-mail: a sessão
-          continua salva e voltar pede só a sua digital ou o seu rosto.
+          continua salva e voltar pede só a sua digital, o seu rosto ou o PIN do aparelho.
         </Paragrafo>
 
         <View style={{ height: spacing.md }} />
