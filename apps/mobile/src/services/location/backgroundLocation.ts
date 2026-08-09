@@ -196,6 +196,73 @@ export async function isTrackingActive(): Promise<boolean> {
   return Location.hasStartedLocationUpdatesAsync(LOCATION_TASK);
 }
 
+export type EstadoRastreamento =
+  | 'ativo'
+  | 'desligado_pelo_usuario'
+  | 'sem_viagem'
+  | 'falta_permissao';
+
+/**
+ * Alinha o rastreamento do APARELHO com o que a viagem diz no banco.
+ *
+ * Existe porque as duas coisas moram em lugares diferentes e podiam divergir
+ * sem ninguém perceber:
+ *
+ *   travel_sessions.gps_tracking_enabled  ... uma coluna, no servidor
+ *   a task de localização ................. registrada no sistema operacional
+ *
+ * Criar a viagem PELO SITE marcava a coluna como ligada e não tinha como
+ * registrar task nenhuma no celular — o site não alcança o aparelho. O app
+ * recebia a viagem nova e mostrava "GPS em segundo plano" desligado, com o
+ * banco afirmando o contrário.
+ *
+ * E o estrago não é cosmético: o check-in passivo DEPENDE dos pings de GPS.
+ * "Deslocamento conta como sinal de vida" só funciona se alguém estiver
+ * medindo deslocamento. Sem a task, o passivo fica ligado na tela e inerte na
+ * prática — a pessoa acredita estar coberta e o cronômetro corre até o alarme.
+ *
+ * NÃO pede permissão sozinha. Um diálogo do sistema aparecendo do nada, sem o
+ * usuário ter tocado em nada, é negado por reflexo — e no iOS o de localização
+ * em segundo plano só pode ser mostrado uma vez na vida do app. Faltando
+ * permissão, devolve `falta_permissao` e quem decide o que mostrar é a tela.
+ */
+export async function sincronizarRastreamento(sessao: {
+  id: string;
+  status: string;
+  gps_tracking_enabled: boolean;
+} | null): Promise<EstadoRastreamento> {
+  const ligadoAgora = await isTrackingActive();
+
+  if (!sessao || sessao.status !== 'active') {
+    // Viagem encerrada em outro aparelho ou pelo site: parar aqui também,
+    // senão o celular segue enviando ping para uma sessão que acabou.
+    if (ligadoAgora) await stopBackgroundTracking().catch(() => {});
+    return 'sem_viagem';
+  }
+
+  if (!sessao.gps_tracking_enabled) {
+    if (ligadoAgora) await stopBackgroundTracking().catch(() => {});
+    return 'desligado_pelo_usuario';
+  }
+
+  if (ligadoAgora) {
+    // A task sobrevive a reinício do aparelho, mas o id da viagem fica no
+    // AsyncStorage. Reescrever é barato e cobre a troca de viagem.
+    await AsyncStorage.setItem(SESSION_KEY, sessao.id);
+    return 'ativo';
+  }
+
+  const { background } = await getPermissionStatus();
+  if (!background) return 'falta_permissao';
+
+  try {
+    await startBackgroundTracking(sessao.id);
+    return 'ativo';
+  } catch {
+    return 'falta_permissao';
+  }
+}
+
 /** Posição imediata — usada pelo SOS e pelo check-in manual. */
 export async function getCurrentPosition() {
   return Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });

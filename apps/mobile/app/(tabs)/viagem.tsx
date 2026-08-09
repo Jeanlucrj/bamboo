@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
@@ -11,6 +11,7 @@ import {
   startBackgroundTracking,
   stopBackgroundTracking,
   isTrackingActive,
+  sincronizarRastreamento,
 } from '../../src/services/location/backgroundLocation';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
@@ -29,9 +30,21 @@ export default function ViagemScreen() {
     }, [load]),
   );
 
-  useEffect(() => {
-    isTrackingActive().then(setTracking);
-  }, [session?.id]);
+  // Alinha a task do aparelho com o banco toda vez que a aba abre. É aqui que
+  // uma viagem criada pelo site liga o rastreamento neste celular — o site
+  // marca a coluna e não alcança o aparelho.
+  useFocusEffect(
+    useCallback(() => {
+      let vivo = true;
+      sincronizarRastreamento(session)
+        .then(() => isTrackingActive())
+        .then((v) => vivo && setTracking(v))
+        .catch(() => {});
+      return () => {
+        vivo = false;
+      };
+    }, [session?.id, session?.gps_tracking_enabled, session?.status]),
+  );
 
   if (!session) {
     return (
@@ -164,10 +177,35 @@ export default function ViagemScreen() {
       />
       <Row
         title="Check-in passivo por deslocamento"
-        subtitle={`Se o celular se afastar mais de ${session.movement_threshold_m} m, o cronômetro zera sozinho.`}
+        subtitle={
+          tracking
+            ? `Se o celular se afastar mais de ${session.movement_threshold_m} m, o cronômetro zera sozinho.`
+            : 'Precisa do GPS em segundo plano para funcionar.'
+        }
         value={session.passive_checkin_enabled}
         onChange={togglePassive}
       />
+
+      {/* O aviso mais importante desta tela.
+          O check-in passivo DEPENDE dos pings do GPS: "deslocamento conta como
+          sinal de vida" só existe se alguém estiver medindo deslocamento. Com o
+          GPS desligado, ele fica ligado na chave e inerte na prática — e a
+          pessoa acredita estar coberta enquanto o cronômetro corre até o
+          alarme acionar a família. É a falha mais cara que este app pode ter,
+          e antes ela era invisível: as duas chaves apareciam ligadas. */}
+      {session.passive_checkin_enabled && !tracking ? (
+        <View style={styles.alerta}>
+          <Text style={styles.alertaTitulo}>O check-in passivo não está valendo</Text>
+          <Text style={styles.alertaTexto}>
+            Ele depende do GPS em segundo plano, que está desligado. Do jeito que está,{' '}
+            <Text style={{ fontWeight: '800' }}>só o check-in manual segura o alarme</Text> — se
+            você esquecer, seus contatos são acionados.
+          </Text>
+          <Pressable style={styles.alertaBotao} onPress={() => toggleTracking(true)}>
+            <Text style={styles.alertaBotaoLabel}>Ligar o GPS em segundo plano</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {/* Este aviso não é letra miúda: é a diferença entre o usuário confiar
           no app e ser pego de surpresa por um alarme que ele causou. */}
@@ -308,4 +346,26 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     justifyContent: 'center',
   },
   encerrarLabel: { ...typo.body, color: c.alert, fontWeight: '700' },
+
+  // Vermelho, não âmbar: não é dica, é "você acha que está protegido e não
+  // está". O bloco de aviso âmbar logo abaixo trata de comportamento esperado.
+  alerta: {
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(208,59,59,0.12)',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(208,59,59,0.45)',
+    padding: spacing.md,
+  },
+  alertaTitulo: { ...typo.small, color: '#FCA5A5', fontWeight: '800' },
+  alertaTexto: { ...typo.caption, color: '#FECACA', marginTop: 4, lineHeight: 18 },
+  alertaBotao: {
+    marginTop: spacing.md,
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: c.alert,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertaBotaoLabel: { ...typo.small, color: '#fff', fontWeight: '800' },
 });

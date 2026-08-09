@@ -27,7 +27,10 @@ import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
 import { Abertura } from '../src/components/Abertura';
 import { TelaBloqueio } from '../src/components/TelaBloqueio';
-import { stopBackgroundTracking } from '../src/services/location/backgroundLocation';
+import {
+  stopBackgroundTracking,
+  sincronizarRastreamento,
+} from '../src/services/location/backgroundLocation';
 import { useSessionStore } from '../src/stores/session';
 import { useBloqueioStore } from '../src/stores/bloqueio';
 import { usePerfilStore } from '../src/stores/perfil';
@@ -210,6 +213,12 @@ function RootNavigator() {
     registerDevice();
 
     const ativa = useSessionStore.getState().session;
+
+    // Alinha a task do aparelho com o que a viagem diz no banco. Cobre o caso
+    // de a viagem ter sido criada ou encerrada pelo site, que não tem como
+    // mexer no rastreamento deste celular.
+    await sincronizarRastreamento(ativa).catch(() => {});
+
     if (!ativa) return;
 
     // Duas entradas quase simultâneas (o efeito de montagem e o AppState logo
