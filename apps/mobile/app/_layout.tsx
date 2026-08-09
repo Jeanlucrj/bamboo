@@ -291,6 +291,7 @@ function RootNavigator() {
             qualquer uma delas não levava a lugar nenhum. */}
         <Stack.Screen name="contatos/index" options={{ title: 'Contatos de emergência' }} />
         <Stack.Screen name="contatos/dossie" options={{ title: 'Dossiê médico' }} />
+        <Stack.Screen name="perfil/dados" options={{ title: 'Meus dados' }} />
         <Stack.Screen name="perfil/acessos" options={{ title: 'Acessos ao dossiê' }} />
         <Stack.Screen name="perfil/exportar" options={{ title: 'Exportar meus dados' }} />
         <Stack.Screen name="perfil/apagar" options={{ title: 'Apagar dados' }} />

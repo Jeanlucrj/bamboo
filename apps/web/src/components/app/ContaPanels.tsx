@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
+import { PAISES } from '@sentinela/shared';
 import {
   salvarPerfil, salvarDossie, apagarMeusDados, type ActionState,
 } from '@/app/(app)/conta/actions';
@@ -38,13 +39,23 @@ export function PerfilForm({ perfil }: { perfil: PerfilRow }) {
         <Field label="Telefone" hint="Usado para o SMS de aviso antes do alerta">
           <input name="phone" defaultValue={perfil.phone ?? ''} placeholder="+5511999999999" className={input} />
         </Field>
-        <Field label="País de origem" hint="2 letras: BR, PT, US…">
-          <input
+        {/* Era um campo de texto de duas letras com a dica "BR, PT, US…".
+            Isso obriga a pessoa a saber o código ISO do próprio país, e aceita
+            qualquer coisa: "Brasil" digitado por extenso passava e virava
+            bandeira em branco na tela. A lista resolve os dois. */}
+        <Field label="País de origem">
+          <select
             name="home_country"
-            maxLength={2}
             defaultValue={perfil.home_country ?? ''}
-            className={`${input} max-w-24 uppercase`}
-          />
+            className={input}
+          >
+            <option value="">Não informado</option>
+            {PAISES.map((p) => (
+              <option key={p.codigo} value={p.codigo}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
         </Field>
       </div>
 

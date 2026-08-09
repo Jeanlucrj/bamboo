@@ -69,6 +69,20 @@ export default function PerfilScreen() {
     <Tela>
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
         <Identidade />
+        {/* Nome, telefone e país só existiam em /conta no site. Quem instalava
+            o app e nunca abria a web não tinha como preencher nenhum deles —
+            e o país é o que faz a bandeira aparecer aqui em cima. */}
+        <Rotulo>Sua conta</Rotulo>
+        <Cartao>
+          <Linha
+            glifo="🪪" cor={c.brandLight}
+            label="Meus dados"
+            descricao="Nome, telefone e país de origem"
+            onPress={() => router.push('/perfil/dados')}
+            ultima
+          />
+        </Cartao>
+
         <Rotulo>Segurança</Rotulo>
         <Cartao>
           <Linha

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { PAISES } from '@sentinela/shared';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 type Mode = 'login' | 'cadastro';
@@ -20,6 +21,7 @@ export function MagicLinkForm({ mode, next }: { mode: Mode; next: string }) {
 
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
+  const [country, setCountry] = useState(() => paisDoNavegador());
   const [accepted, setAccepted] = useState(false);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -39,7 +41,9 @@ export function MagicLinkForm({ mode, next }: { mode: Mode; next: string }) {
         shouldCreateUser: isSignup,
         // Vai para raw_user_meta_data e é lido pelo trigger tg_handle_new_user
         // ao criar a linha em public.profiles.
-        data: isSignup ? { full_name: fullName.trim() } : undefined,
+        data: isSignup
+          ? { full_name: fullName.trim(), home_country: country || null }
+          : undefined,
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
@@ -100,6 +104,32 @@ export function MagicLinkForm({ mode, next }: { mode: Mode; next: string }) {
         />
       </Field>
 
+      {/* País de origem.
+          Não dá para deduzir do e-mail: @gmail.com não diz nada, e o .br do
+          domínio seria chute — a maioria dos brasileiros usa provedor
+          internacional. Sem perguntar, a bandeira do app fica vazia e o dossiê
+          perde a referência de nacionalidade.
+          Já vem preenchido pelo idioma do navegador, então na maioria das
+          vezes é só conferir. */}
+      {isSignup && (
+        <Field label="País de origem">
+          <select
+            required
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            autoComplete="country"
+            className={inputClass}
+          >
+            <option value="">Selecione…</option>
+            {PAISES.map((p) => (
+              <option key={p.codigo} value={p.codigo}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
+
       {isSignup && (
         <label className="flex items-start gap-3 text-xs leading-relaxed text-slate-400">
           <input
@@ -132,13 +162,34 @@ export function MagicLinkForm({ mode, next }: { mode: Mode; next: string }) {
 
       <button
         type="submit"
-        disabled={busy || !email || (isSignup && (!fullName || !accepted))}
+        disabled={busy || !email || (isSignup && (!fullName || !country || !accepted))}
         className="w-full rounded-lg bg-teal-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {busy ? 'Enviando…' : isSignup ? 'Criar conta' : 'Receber link de acesso'}
       </button>
     </form>
   );
+}
+
+/**
+ * Palpite inicial do país, a partir do idioma do navegador.
+ *
+ * `pt-BR` -> BR, `en-US` -> US. É palpite mesmo: quem usa o sistema em inglês
+ * morando no Brasil vai receber US. Por isso ele só PRÉ-SELECIONA um campo
+ * visível, que a pessoa confere num relance — nunca grava nada em silêncio.
+ *
+ * Sem isso a alternativa seria uma lista de 257 países começando em branco.
+ */
+function paisDoNavegador(): string {
+  try {
+    for (const tag of navigator.languages ?? [navigator.language]) {
+      const regiao = new Intl.Locale(tag).region;
+      if (regiao && PAISES.some((p) => p.codigo === regiao)) return regiao;
+    }
+  } catch {
+    /* navegador antigo sem Intl.Locale — cai no campo vazio */
+  }
+  return '';
 }
 
 const inputClass =

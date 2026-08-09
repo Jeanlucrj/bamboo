@@ -5,3 +5,4 @@ export * from './schemas';
 // o gerado sem levar junto os tipos de jsonb e os apelidos.
 export type { Database, Json } from './types/database';
 export type * from './types/app';
+export * from './paises';
