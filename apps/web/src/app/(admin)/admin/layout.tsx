@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { LogoCompleta } from '@/components/ui/Logo';
 import Link from 'next/link';
 import { PLATFORM_ROLE_META } from '@sentinela/shared';
 import { requireAdmin } from '@/lib/admin/guard';
@@ -25,8 +26,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="border-b border-slate-800/40 bg-slate-900/30 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/admin" className="text-sm font-extrabold tracking-[0.2em]">
-              <span className="gradient-text">SENTINELA</span>
+            <Link href="/admin" className="transition-opacity hover:opacity-90">
+              <LogoCompleta size={26} />
             </Link>
             <span className="rounded-full border border-red-800/40 bg-red-950/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-300 animate-pulse">
               Interno

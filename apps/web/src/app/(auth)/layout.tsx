@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import { LogoCompleta } from '@/components/ui/Logo';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950">
       <header className="border-b border-slate-800/80">
         <div className="mx-auto flex max-w-6xl items-center px-6 py-4">
-          <Link href="/" className="text-sm font-extrabold tracking-[0.2em] text-teal-400">
-            SENTINELA
+          <Link href="/" className="transition-opacity hover:opacity-90">
+            <LogoCompleta size={26} />
           </Link>
         </div>
       </header>

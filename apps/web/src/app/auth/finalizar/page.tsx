@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -67,9 +68,9 @@ export default function FinalizarLogin() {
           <>
             <p className="text-sm font-semibold text-red-400">Não foi possível entrar</p>
             <p className="mt-2 text-sm text-slate-400">{erro}</p>
-            <a href="/login" className="mt-5 inline-block text-sm font-semibold text-teal-400">
+            <Link href="/login" className="mt-5 inline-block text-sm font-semibold text-teal-400">
               Pedir um novo link
-            </a>
+            </Link>
           </>
         ) : (
           <p className="text-sm text-slate-400">Entrando…</p>

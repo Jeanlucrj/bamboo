@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { CHECKIN_PRESETS } from '@sentinela/shared';
 import { Identidade } from '../../src/components/Identidade';
 import { useSessionStore } from '../../src/stores/session';
@@ -21,6 +22,12 @@ export default function ViagemScreen() {
   const [tracking, setTracking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [encerrando, setEncerrando] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   useEffect(() => {
     isTrackingActive().then(setTracking);

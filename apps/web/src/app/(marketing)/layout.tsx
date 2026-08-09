@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LogoCompleta } from '@/components/ui/Logo';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AppHandoff } from '@/components/device/AppHandoff';
@@ -28,8 +29,8 @@ export default function MarketingShell({ children }: { children: React.ReactNode
       {/* Header glassmorphism */}
       <header className="sticky top-0 z-50 border-b border-slate-800/40 bg-[#070b14]/80 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-sm font-extrabold tracking-[0.2em] transition-colors hover:text-white">
-            <span className="gradient-text">SENTINELA</span>
+          <Link href="/" className="transition-opacity hover:opacity-90">
+            <LogoCompleta size={26} />
           </Link>
 
           {/* Desktop nav */}
@@ -115,9 +116,7 @@ export default function MarketingShell({ children }: { children: React.ReactNode
 
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-14 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
-            <p className="text-sm font-extrabold tracking-[0.2em]">
-              <span className="gradient-text">SENTINELA</span>
-            </p>
+            <LogoCompleta size={26} />
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-500">
               Segurança e memórias para quem viaja sozinho.
             </p>

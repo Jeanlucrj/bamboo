@@ -46,23 +46,67 @@ export async function criarViagem(_prev: ActionState, formData: FormData): Promi
     return { ok: false, message: 'Você já tem uma viagem ativa. Encerre-a antes de criar outra.' };
   }
 
-  const { error } = await supabase.from('travel_sessions').insert({
-    user_id: user.id,
-    title: parsed.data.title,
-    destination_label: parsed.data.destination_label ?? null,
-    // Forma textual: o trigger set_expected_checkin recalcula
-    // expected_checkin_at a partir dela.
-    checkin_interval: `${parsed.data.checkin_hours} hours`,
-    passive_checkin_enabled: parsed.data.passive_checkin_enabled,
-    gps_tracking_enabled: parsed.data.gps_tracking_enabled,
-    status: 'active',
-  });
+  const initialLat = formData.get('initial_lat') ? Number(formData.get('initial_lat')) : null;
+  const initialLng = formData.get('initial_lng') ? Number(formData.get('initial_lng')) : null;
+  const initialAccuracy = formData.get('initial_accuracy') ? Number(formData.get('initial_accuracy')) : null;
+
+  const { data: nova, error } = await supabase
+    .from('travel_sessions')
+    .insert({
+      user_id: user.id,
+      title: parsed.data.title,
+      destination_label: parsed.data.destination_label ?? null,
+      // Forma textual: o trigger set_expected_checkin recalcula
+      // expected_checkin_at a partir dela.
+      checkin_interval: `${parsed.data.checkin_hours} hours`,
+      passive_checkin_enabled: parsed.data.passive_checkin_enabled,
+      gps_tracking_enabled: parsed.data.gps_tracking_enabled,
+      status: 'active',
+    })
+    .select('id')
+    .single();
 
   if (error) return { ok: false, message: error.message };
 
+  let locMsg = '';
+  // Se o navegador enviou a localização inicial, grava no histórico de GPS e emite o 1º sinal
+  if (nova && initialLat !== null && initialLng !== null && !isNaN(initialLat) && !isNaN(initialLng)) {
+    try {
+      const now = new Date().toISOString();
+      const pingId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-ping`;
+
+      await supabase.rpc('ingest_location_batch', {
+        p_pings: [
+          {
+            session_id: nova.id,
+            client_ping_id: pingId,
+            lat: initialLat,
+            lng: initialLng,
+            accuracy_m: initialAccuracy,
+            recorded_at: now,
+          },
+        ],
+      });
+
+      await supabase.rpc('record_signal', {
+        p_session_id: nova.id,
+        p_kind: 'manual_checkin',
+        p_source: 'web_browser',
+        p_metadata: { lat: initialLat, lng: initialLng, source: 'web_initial_location' },
+      });
+
+      locMsg = ' Posição inicial capturada e salva no mapa.';
+    } catch (e) {
+      console.warn('[actions] Erro ao gravar localização inicial da web:', e);
+    }
+  }
+
   revalidatePath('/viagens');
   revalidatePath('/dashboard');
-  return { ok: true, message: 'Viagem criada. Abra o app no celular para o monitoramento começar.' };
+  return {
+    ok: true,
+    message: `Viagem criada com sucesso.${locMsg} Abra o app no celular para manter o rastreamento em segundo plano.`,
+  };
 }
 
 export async function encerrarViagem(_prev: ActionState, formData: FormData): Promise<ActionState> {

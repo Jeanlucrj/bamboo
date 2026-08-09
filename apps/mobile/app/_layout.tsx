@@ -164,6 +164,18 @@ function RootNavigator() {
     // identidade piscar no topo de quatro telas.
     usePerfilStore.getState().carregar();
 
+    /**
+     * Tempo real de `travel_sessions` — é o que faz uma viagem criada no site
+     * aparecer no celular sem precisar puxar a tela.
+     *
+     * Aqui e não na Home: montada lá, a inscrição subia junto com a primeira
+     * renderização, que pode acontecer antes de a sessão salva ser restaurada.
+     * Canal sem token é canal que a RLS não alimenta — conecta, responde
+     * SUBSCRIBED e nunca entrega nada. Este efeito só roda quando `session` já
+     * existe, então o token está em mãos.
+     */
+    const cancelarInscricao = useSessionStore.getState().subscribe();
+
     // Push e registro de aparelho em paralelo, isolados. São importantes — o
     // device_id carimba os sinais e o push entrega o aviso antes do alerta —
     // mas nenhum dos dois é pré-requisito para desenhar a tela.
@@ -175,6 +187,10 @@ function RootNavigator() {
         console.warn('[sentinela] registro de push/aparelho falhou:', e);
       }
     })();
+
+    // Fecha o canal ao sair da conta. Sem isto, trocar de usuário deixaria o
+    // anterior escutando — e o novo abriria um segundo canal por cima.
+    return cancelarInscricao;
   }, [session?.user?.id]);
 
   /**

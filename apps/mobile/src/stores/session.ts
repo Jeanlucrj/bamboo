@@ -91,17 +91,16 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }
   },
 
-  /** Realtime: o estado muda no servidor (cron), não no app. */
+  /** Realtime: escuta criação, atualização e encerramento de viagens no servidor (web ou cron). */
   subscribe() {
-    const session = get().session;
-    if (!session) return () => {};
-
     const channel = supabase
-      .channel(`session:${session.id}`)
+      .channel('realtime:travel_sessions')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'travel_sessions', filter: `id=eq.${session.id}` },
-        (payload) => set({ session: payload.new as TravelSession }),
+        { event: '*', schema: 'public', table: 'travel_sessions' },
+        async () => {
+          await get().load();
+        },
       )
       .subscribe();
 

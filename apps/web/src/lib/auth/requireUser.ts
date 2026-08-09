@@ -9,9 +9,18 @@ export async function requireUser(next: string) {
   let user = null;
 
   try {
-    const { data } = await supabase.auth.getUser();
-    user = data?.user ?? null;
-  } catch (err) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl && supabaseUrl.includes('placeholder')) {
+      user = null;
+    } else {
+      const userPromise = supabase.auth.getUser();
+      const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+        setTimeout(() => resolve({ data: { user: null } }), 2500),
+      );
+      const { data } = await Promise.race([userPromise, timeoutPromise]);
+      user = data?.user ?? null;
+    }
+  } catch {
     user = null;
   }
 

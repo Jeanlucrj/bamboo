@@ -7,7 +7,49 @@ import { criarViagem, type ActionState } from '@/app/(app)/viagens/actions';
 export function NovaViagemForm({ bloqueada }: { bloqueada: boolean }) {
   const [aberto, setAberto] = useState(false);
   const [horas, setHoras] = useState(24);
+  const [location, setLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
   const [state, action, pending] = useActionState<ActionState, FormData>(criarViagem, null);
+
+  const obterLocalizacao = () => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      setLocError('Geolocalização não é suportada neste navegador.');
+      return;
+    }
+
+    setLocating(true);
+    setLocError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        });
+        setLocating(false);
+      },
+      (err) => {
+        let msg = 'Não foi possível obter a localização.';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'Permissão de localização negada no navegador.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'Sinal de localização indisponível.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'Tempo limite esgotado ao buscar localização.';
+        }
+        setLocError(msg);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
+  // Tenta obter a localização automaticamente assim que abre o formulário
+  if (aberto && !location && !locating && !locError) {
+    obterLocalizacao();
+  }
 
   if (bloqueada) {
     return (
@@ -33,6 +75,54 @@ export function NovaViagemForm({ bloqueada }: { bloqueada: boolean }) {
   return (
     <form action={action} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-7">
       <h2 className="text-lg font-bold text-white">Nova viagem</h2>
+
+      {/* Hidden inputs para passar a localização inicial para a Server Action */}
+      {location && (
+        <>
+          <input type="hidden" name="initial_lat" value={location.lat} />
+          <input type="hidden" name="initial_lng" value={location.lng} />
+          {location.accuracy && <input type="hidden" name="initial_accuracy" value={location.accuracy} />}
+        </>
+      )}
+
+      {/* Status da Localização Inicial via Navegador */}
+      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">📍</span>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Localização Inicial via Navegador
+              </p>
+              {locating && (
+                <p className="mt-0.5 text-xs text-teal-400 animate-pulse">
+                  Detectando posição atual via GPS do navegador…
+                </p>
+              )}
+              {location && (
+                <p className="mt-0.5 text-xs font-semibold text-emerald-400">
+                  Posição capturada: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  {location.accuracy ? ` (precisão ~${Math.round(location.accuracy)}m)` : ''}
+                </p>
+              )}
+              {locError && (
+                <p className="mt-0.5 text-xs text-amber-400">
+                  {locError} (a viagem iniciará sem coordenadas Web).
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={obterLocalizacao}
+            disabled={locating}
+            className="shrink-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-slate-600 hover:text-white disabled:opacity-50"
+          >
+            {locating ? 'Buscando…' : location ? 'Atualizar posição' : 'Tentar novamente'}
+          </button>
+        </div>
+      </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <label className="block">
@@ -103,10 +193,11 @@ export function NovaViagemForm({ bloqueada }: { bloqueada: boolean }) {
       </div>
 
       <div className="mt-6 rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3">
-        <p className="text-sm font-semibold text-amber-200">O monitoramento começa no celular</p>
+        <p className="text-sm font-semibold text-amber-200">O monitoramento avança no celular</p>
         <p className="mt-1 text-xs leading-relaxed text-amber-200/70">
-          A viagem é criada agora, mas nenhum sinal de vida existe até você abrir o app no celular.
-          Até lá o cronômetro corre e o alarme pode disparar sem que nada esteja errado.
+          {location
+            ? 'A posição inicial desta viagem foi gravada pelo seu navegador. Abra o app no celular para manter o rastreamento contínuo em segundo plano.'
+            : 'A viagem é criada agora, mas nenhum sinal de vida existe até você abrir o app no celular. Até lá o cronômetro corre e o alarme pode disparar.'}
         </p>
       </div>
 
@@ -133,7 +224,11 @@ export function NovaViagemForm({ bloqueada }: { bloqueada: boolean }) {
         </button>
         <button
           type="button"
-          onClick={() => setAberto(false)}
+          onClick={() => {
+            setAberto(false);
+            setLocation(null);
+            setLocError(null);
+          }}
           className="text-sm text-slate-500 transition hover:text-slate-300"
         >
           Cancelar

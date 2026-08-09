@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { AppHandoff } from '@/components/device/AppHandoff';
 import { AppNav } from '@/components/app/AppNav';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LogoCompleta } from '@/components/ui/Logo';
+import { SincronizaViagens } from '@/components/app/SincronizaViagens';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,20 +13,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div className="relative z-10">
         <AppHandoff />
+        {/* Ouve mudanças de viagem vindas do app e refaz a página. Fica no
+            layout, e não numa página, para valer em todas as telas do painel. */}
+        <SincronizaViagens />
 
         <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-[#070b14]/80 backdrop-blur-2xl">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
+              {/* Era um emoji 🛡️ dentro de um quadrado com gradiente, e a
+                  palavra em `gradient-heading` — nada a ver com o anel que o
+                  app mostra na abertura e na entrada. Agora é a mesma marca. */}
               <Link href="/dashboard" className="group flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
-                  <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#070b14] text-teal-400 font-bold text-base">
-                    🛡️
-                  </div>
-                </div>
-                <div>
-                  <span className="gradient-heading text-lg font-black tracking-widest">SENTINELA</span>
-                  <span className="block text-[10px] font-semibold tracking-wider text-teal-400/80 uppercase">Solo Travel Guardian</span>
-                </div>
+                <LogoCompleta size={30} texto="text-base" className="transition-opacity group-hover:opacity-90" />
               </Link>
 
               <span className="hidden items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-950/40 px-2.5 py-0.5 text-[11px] font-semibold text-teal-300 sm:inline-flex">

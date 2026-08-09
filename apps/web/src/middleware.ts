@@ -15,36 +15,58 @@ const GUEST_ONLY = ['/login', '/cadastro'];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const path = request.nextUrl.pathname;
+
+  const isProtected = PROTECTED.some((p) => path.startsWith(p));
+  const isGuestOnly = GUEST_ONLY.some((p) => path === p);
+
+  // 1. Resposta instantânea para páginas públicas (marketing, dossiê, etc.)
+  // Não faz nenhuma chamada externa de rede para autenticação em rotas públicas!
+  if (!isProtected && !isGuestOnly) {
+    return response;
+  }
+
+  // 2. Checagem rápida de cookies Supabase antes de ir à rede
+  const cookies = request.cookies.getAll();
+  const hasAuthCookie = cookies.some((c) => c.name.startsWith('sb-') || c.name.includes('auth-token'));
 
   let user = null;
 
-  try {
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => request.cookies.getAll(),
-          setAll(items: CookieToSet[]) {
-            items.forEach(({ name, value }) => request.cookies.set(name, value));
-            response = NextResponse.next({ request });
-            items.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const isPlaceholderUrl = !supabaseUrl || supabaseUrl.includes('placeholder');
+
+  // Só consulta o Supabase se houver cookie de autenticação e URL válida do Supabase
+  if (hasAuthCookie && !isPlaceholderUrl) {
+    try {
+      const supabase = createServerClient<Database>(
+        supabaseUrl,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll: () => request.cookies.getAll(),
+            setAll(items: CookieToSet[]) {
+              items.forEach(({ name, value }) => request.cookies.set(name, value));
+              response = NextResponse.next({ request });
+              items.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+            },
           },
         },
-      },
-    );
+      );
 
-    const { data } = await supabase.auth.getUser();
-    user = data?.user ?? null;
-  } catch (err) {
-    // Se o Supabase estiver indisponível ou houver falha de rede/credencial,
-    // o middleware não deve quebrar com Internal Server Error (500).
-    user = null;
+      // Timeout de 2 segundos para evitar que latência/falhas de rede travem a navegação
+      const userPromise = supabase.auth.getUser();
+      const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+        setTimeout(() => resolve({ data: { user: null } }), 2000),
+      );
+
+      const { data } = await Promise.race([userPromise, timeoutPromise]);
+      user = data?.user ?? null;
+    } catch {
+      user = null;
+    }
   }
 
-  const path = request.nextUrl.pathname;
-
-  if (!user && PROTECTED.some((p) => path.startsWith(p))) {
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.search = '';
@@ -52,7 +74,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && GUEST_ONLY.some((p) => path === p)) {
+  if (user && isGuestOnly) {
     const url = request.nextUrl.clone();
     const target = safeNextPath(request.nextUrl.searchParams.get('next'));
     url.pathname = target.split('?')[0];

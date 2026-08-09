@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SIGNAL_LABEL } from '@sentinela/shared';
 
 import { Identidade } from '../../src/components/Identidade';
@@ -17,11 +17,24 @@ export default function HomeScreen() {
   const c = useColors();
   const styles = useStyles(criarEstilos);
   const router = useRouter();
-  const { session, loading, error, load, checkIn, subscribe } = useSessionStore();
+  const { session, loading, error, load, checkIn } = useSessionStore();
   const [pending, setPending] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => subscribe(), [session?.id]);
+  // A inscrição de tempo real mora no layout raiz, não aqui.
+  //
+  // Montada nesta tela, ela subia junto com a Home — que pode renderizar antes
+  // de o Supabase terminar de restaurar a sessão salva. Canal aberto sem token
+  // é canal que a RLS não alimenta: ele conecta, responde SUBSCRIBED e nunca
+  // recebe evento nenhum. No layout ela é criada depois do login conhecido.
+
+  // Recarrega a viagem sempre que a aba voltar a ficar em foco na tela do celular
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
   useEffect(() => {
     queueSize().then(setPending);
   }, [session?.last_signal_at]);
