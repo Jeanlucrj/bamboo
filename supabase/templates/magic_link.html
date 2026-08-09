@@ -24,11 +24,37 @@
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
              style="max-width:520px;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,0.12);">
 
+        <!--
+          Cabeçalho com a marca.
+
+          O anel é PNG hospedado no Storage público do próprio projeto, não SVG
+          nem data URI: o Gmail descarta os dois. Também não é desenhado com
+          border-radius — o Outlook do Windows renderiza e-mail com o motor do
+          Word, que ignora raio de borda e transformaria o anel num quadrado.
+
+          Tabela de duas colunas em vez de flex, pelo mesmo motivo de sempre:
+          layout de e-mail é 2003.
+
+          `alt` preenchido porque metade dos clientes bloqueia imagem por
+          padrão — sem ele o topo do e-mail fica vazio e sem identidade, que é
+          justamente o oposto do que a marca está fazendo aqui.
+        -->
         <tr>
-          <td style="background-color:#0b1120;padding:22px 32px;">
-            <span style="color:#2dd4bf;font-size:13px;font-weight:800;letter-spacing:3.5px;">
-              SENTINELA
-            </span>
+          <td style="background-color:#0b1120;padding:20px 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;vertical-align:middle;">
+                  <img src="https://mewxuybwxdznszkcpdcy.supabase.co/storage/v1/object/public/publico/logo-sentinela.png"
+                       width="34" height="34" alt="Sentinela"
+                       style="display:block;width:34px;height:34px;border:0;outline:none;text-decoration:none;" />
+                </td>
+                <td style="vertical-align:middle;">
+                  <span style="color:#2dd4bf;font-size:13px;font-weight:800;letter-spacing:3.5px;">
+                    SENTINELA
+                  </span>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
