@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { LogoCompleta } from '@/components/ui/Logo';
+import { BotaoWhatsApp } from '@/components/marketing/BotaoWhatsApp';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AppHandoff } from '@/components/device/AppHandoff';
@@ -109,6 +110,11 @@ export default function MarketingShell({ children }: { children: React.ReactNode
       </header>
 
       <main>{children}</main>
+
+      {/* Fica no layout, não em cada página: assim acompanha o visitante por
+          Home, Preços e Para empresas sem repetição — e some sozinho dentro do
+          painel, que usa outro layout. */}
+      <BotaoWhatsApp />
 
       <footer className="relative border-t border-slate-800/40 bg-[#070b14] pt-1">
         {/* Gradient divider */}

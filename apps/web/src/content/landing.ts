@@ -460,3 +460,15 @@ export const finalCta = {
   cta: { label: 'Começar grátis', href: '/cadastro' },
   footnote: 'Sem cartão. 2 viagens completas, com o produto inteiro.',
 } as const;
+
+/**
+ * Contato por WhatsApp na página de vendas.
+ *
+ * Número em E.164 sem `+` — é o formato que o `wa.me` exige na URL. Fica aqui,
+ * junto do resto da copy, para trocar o telefone não virar caça a string
+ * espalhada por componente.
+ */
+export const WHATSAPP_CONTATO = {
+  numero: '5511977183338',
+  exibicao: '(11) 97718-3338',
+} as const;
