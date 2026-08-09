@@ -18,17 +18,22 @@ import { bloqueioAtivo } from '../services/bloqueio';
  */
 
 /**
- * Janela de tolerância ao voltar do segundo plano.
+ * Janela mínima, e ela encolheu de 15 s para 2 s de propósito.
  *
- * Não é conforto, é necessidade técnica: o próprio diálogo de biometria, o
- * seletor de arquivos e o pedido de permissão do Android tiram o app do
- * primeiro plano. Sem uma janela, voltar do prompt dispararia outro prompt —
- * laço infinito com o usuário preso.
+ * A regra pedida é "sempre que sair e voltar", então o tempo deixou de ser o
+ * critério. Quem separa "saiu" de "não saiu" agora é o ESTADO: só
+ * `background` conta como saída — `inactive` não.
  *
- * 15 s cobre isso e ainda deixa a regra previsível: olhar uma notificação e
- * voltar não pede nada; sair do app de verdade pede.
+ * A distinção importa e é o que torna o "sempre" viável. `inactive` é o estado
+ * de transição: puxar a central de notificações, atender uma ligação, girar a
+ * tela, ver o seletor de apps. Tratar isso como saída pediria digital dezenas
+ * de vezes por dia sem o usuário ter saído de nada.
+ *
+ * Os 2 s que sobram cobrem só o intervalo entre o app perder o foco e o
+ * diálogo do sistema aparecer — pedido de permissão, folha de compartilhar.
+ * O diálogo de biometria em si tem trava própria (`autenticando`).
  */
-const TOLERANCIA_MS = 15_000;
+const TOLERANCIA_MS = 2_000;
 
 type EntradaStore = {
   /** True enquanto a confirmação de entrada não passou. */

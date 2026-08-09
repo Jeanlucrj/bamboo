@@ -138,14 +138,14 @@ function RootNavigator() {
     }
     if (!session || !naEntrada) return;
 
-    // Quem ACABOU de entrar pelo link mágico passa pelo priming de localização
-    // antes das abas — é o único momento em que dá para explicar o "Sempre"
-    // antes do diálogo do sistema. As telas de permissão encadeiam até
-    // `replace('/(tabs)')` no fim.
+    // Quem ACABOU de entrar pelo link do e-mail começa pela oferta da
+    // biometria. É o único instante em que o argumento se explica sozinho: a
+    // pessoa acabou de esperar o e-mail, abrir e clicar. Dali a tela encadeia
+    // para o priming de localização e depois para as abas.
     //
     // Quem abre o app com sessão já salva não passa por aqui: `segments[0]`
     // nem é `(onboarding)`, e a guarda não toca em nada.
-    if (partes[1] === 'login') router.replace('/(onboarding)/permissoes-localizacao');
+    if (partes[1] === 'login') router.replace('/(onboarding)/biometria');
     else router.replace('/(tabs)');
   }, [session, ready, segments]);
 
@@ -271,10 +271,14 @@ function RootNavigator() {
       // Voltar do segundo plano também é ENTRAR no app, então também pede
       // biometria — com a janela de tolerância da store, que existe para o
       // próprio diálogo do sistema não virar laço infinito.
-      if (state !== 'active') {
+      // Só `background` conta como saída. `inactive` é transição — central de
+      // notificações, ligação chegando, seletor de apps, tela girando. Contar
+      // isso como saída pediria digital dezenas de vezes por dia.
+      if (state === 'background') {
         useBloqueioStore.getState().aoSair();
         return;
       }
+      if (state !== 'active') return;
 
       await useBloqueioStore.getState().aoVoltar();
       if (!session) return;
