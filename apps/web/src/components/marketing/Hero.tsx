@@ -50,9 +50,12 @@ export function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-teal-400" />
           </span>
-          <span className="shimmer rounded-full">
-            +<AnimatedCounter value={2400} className="font-semibold" /> viajantes em <AnimatedCounter value={78} className="font-semibold" /> países
-          </span>
+          {/* Aqui rodava um contador animado de "+2.400 viajantes em 78
+              países". O número era inventado — e estava escrito no componente,
+              ignorando o `hero.eyebrow` do arquivo de conteúdo, o que fez ele
+              sobreviver à primeira limpeza. Copy fora do content é copy que
+              ninguém encontra quando precisa corrigir. */}
+          <span className="shimmer rounded-full font-medium">{hero.eyebrow}</span>
         </p>
 
         {/* Headline com gradient text */}
@@ -98,14 +101,16 @@ export function Hero() {
           className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500 animate-fade-in-up"
           style={{ animationDelay: '400ms' }}
         >
-          <span className="flex items-center gap-1.5">
-            <span className="text-yellow-400">★★★★★</span>
-            <span>4,9</span>
-          </span>
-          <span className="h-3 w-px bg-slate-700" />
-          <span>+2.400 viajantes</span>
-          <span className="h-3 w-px bg-slate-700" />
-          <span>Sem cartão de crédito</span>
+          {/* Sem estrelas e sem contagem de usuários: não há avaliação nem
+              base para citar. O que ficou são compromissos verificáveis — e
+              num produto que vende confiança eles convencem mais do que uma
+              nota que o visitante não consegue conferir em lugar nenhum. */}
+          {hero.socialProof.split(' · ').map((item, i) => (
+            <span key={item} className="flex items-center gap-x-6">
+              {i > 0 ? <span className="h-3 w-px bg-slate-700" /> : null}
+              <span>{item}</span>
+            </span>
+          ))}
         </div>
       </div>
     </section>

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     'Planos do Sentinela: do gratuito ao enterprise. Comece sem cartão de crédito.',
   openGraph: {
     title: 'Preços — Sentinela',
-    description: 'Do plano gratuito ao enterprise. 30 dias sem cartão de crédito.',
+    description: 'Duas viagens completas de graça, sem cartão. Depois R$ 49,90/mês.',
     type: 'website',
   },
 };
@@ -35,8 +35,8 @@ export default function PrecosPage() {
             Um seguro que você espera nunca precisar usar.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-400">
-            Comece grátis e sem cartão. Se em 30 dias o Sentinela não tiver desaparecido da sua
-            rotina — que é exatamente o objetivo dele — não assine.
+            Duas viagens completas, sem cartão. Se ao fim delas o Sentinela não tiver desaparecido
+            da sua rotina — que é exatamente o objetivo dele — não assine.
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3">

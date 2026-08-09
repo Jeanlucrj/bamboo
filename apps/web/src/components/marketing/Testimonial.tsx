@@ -1,8 +1,16 @@
 'use client';
 
-import { testimonial, trustBadges } from '@/content/landing';
+import { cenario, trustBadges } from '@/content/landing';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
+/**
+ * Era um depoimento com nome, avatar e aspas — de uma cliente que não existe.
+ * Virou a descrição do cenário que o produto cobre.
+ *
+ * A mudança visual acompanha a mudança de natureza: sem aspas decorativas e
+ * sem avatar. Manter a moldura de citação com texto que não é citação seria
+ * trocar uma mentira explícita por uma implícita.
+ */
 export function Testimonial() {
   return (
     <section className="relative border-b border-slate-800/50 bg-slate-900/30 py-24">
@@ -14,25 +22,15 @@ export function Testimonial() {
 
       <div className="relative mx-auto max-w-3xl px-6 text-center">
         <ScrollReveal>
-          {/* Quote marks decorativas */}
-          <div className="mb-6 flex justify-center">
-            <span className="gradient-text text-6xl font-serif leading-none opacity-40">"</span>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-400">
+            {cenario.titulo}
+          </p>
 
-          <blockquote className="text-balance text-xl font-medium leading-relaxed text-white sm:text-2xl">
-            {testimonial.quote}
-          </blockquote>
+          <p className="mt-6 text-balance text-xl font-medium leading-relaxed text-white sm:text-2xl">
+            {cenario.corpo}
+          </p>
 
-          {/* Autor com gradient ring */}
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-sm font-bold text-white shadow-glow-teal">
-              {testimonial.author[0]}
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-white">{testimonial.author}</p>
-              <p className="text-xs text-slate-500">{testimonial.detail}</p>
-            </div>
-          </div>
+          <p className="mt-6 text-sm font-semibold text-slate-400">{cenario.rodape}</p>
         </ScrollReveal>
 
         {/* Trust badges com hover glow */}

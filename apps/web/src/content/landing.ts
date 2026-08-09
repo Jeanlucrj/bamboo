@@ -5,8 +5,24 @@
  * precisar abrir JSX, e testes A/B de headline não deveriam mexer em layout.
  */
 
+/**
+ * NÚMERO INVENTADO NÃO ENTRA AQUI.
+ *
+ * Esta seção afirmava "+2.400 viajantes em 78 países" e "★★★★★ 4,9". O banco
+ * tem 3 contas, duas delas de teste, e uma viagem real. Não era copy otimista:
+ * era afirmação falsa de fato numa página de venda, o que no Brasil é
+ * publicidade enganosa (CDC art. 37) — e, pior para o produto, é a primeira
+ * coisa que alguém desconfia e vai conferir.
+ *
+ * Um app que promete avisar sua família se você sumir vende confiança antes de
+ * vender função. Ser pego inflando número é o jeito mais barato de perder
+ * exatamente isso.
+ *
+ * Prova social entra quando existir. Enquanto não existe, o lugar dela é
+ * ocupado por algo verificável.
+ */
 export const hero = {
-  eyebrow: '+2.400 viajantes em 78 países',
+  eyebrow: 'Duas viagens completas de graça, sem cartão',
   headline: 'Se algo acontecer com você lá fora, alguém vai saber. Automaticamente.',
   // Variações para teste A/B
   headlineVariants: [
@@ -15,9 +31,11 @@ export const hero = {
   ],
   subheadline:
     'O Sentinela usa a localização do seu celular para saber que você está em movimento — e isso já conta como sinal de vida. Se você sumir, seus contatos recebem sua última localização, seus dados médicos e os telefones de emergência do país onde você está. E, enquanto nada acontece, ele transforma tudo isso no diário de viagem que você nunca teve disciplina de escrever.',
-  ctaPrimary: { label: 'Começar grátis — 30 dias', href: '/cadastro' },
-  ctaSecondary: { label: 'Ver como funciona (90s)', href: '#como-funciona' },
-  socialProof: '★★★★★ 4,9 · +2.400 viajantes em 78 países · Sem cartão de crédito',
+  ctaPrimary: { label: 'Começar grátis — 2 viagens', href: '/cadastro' },
+  // Sem "(90s)": não existe vídeo. O link rola para a seção "Como funciona", e
+  // prometer um vídeo que não abre é frustração no primeiro clique.
+  ctaSecondary: { label: 'Ver como funciona', href: '#como-funciona' },
+  socialProof: 'Sem cartão de crédito · Cancele quando quiser · Apague tudo com 1 clique',
 } as const;
 
 export const problem = {
@@ -104,11 +122,26 @@ export const audiences = {
   },
 } as const;
 
-export const testimonial = {
-  quote:
-    'Fiquei presa numa estrada no Nepal sem sinal por dois dias. Quando cheguei numa vila com Wi-Fi, tinha 11 mensagens. Todo mundo já sabia exatamente onde eu estava.',
-  author: 'Marina S.',
-  detail: '43 países',
+/**
+ * Aqui havia um depoimento assinado por "Marina S., 43 países", com história
+ * detalhada de dois dias sem sinal no Nepal. Cliente inventada.
+ *
+ * Depoimento falso é pior que os números falsos: dá nome e rosto a uma pessoa
+ * que não existe, e num produto de segurança a mentira contamina o único ativo
+ * que ele tem para vender, que é confiança.
+ *
+ * No lugar entrou o cenário que o produto realmente cobre, escrito como
+ * cenário — sem aspas, sem nome, sem avatar. Vende a mesma coisa e é
+ * verificável: qualquer um pode testar nas duas viagens grátis.
+ *
+ * Quando houver usuário real com história real, esta seção volta a ser
+ * depoimento — com autorização por escrito.
+ */
+export const cenario = {
+  titulo: 'O caso para o qual ele foi feito',
+  corpo:
+    'Você pega uma estrada sem sinal e some por dois dias. Ninguém precisa perceber, nem decidir se já é hora de se preocupar: passado o prazo que você mesmo combinou, seus contatos recebem sua última posição conhecida, seus dados médicos e os telefones de emergência do país onde você está.',
+  rodape: 'Nada disso depende de você conseguir avisar.',
 } as const;
 
 export const trustBadges = [
@@ -425,5 +458,5 @@ export const finalCta = {
   title: 'A viagem é sua. O risco não precisa ser só seu.',
   body: 'Configure em 3 minutos. Cancele quando quiser.',
   cta: { label: 'Começar grátis', href: '/cadastro' },
-  footnote: 'Sem cartão. 30 dias completos.',
+  footnote: 'Sem cartão. 2 viagens completas, com o produto inteiro.',
 } as const;
