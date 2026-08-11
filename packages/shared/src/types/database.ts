@@ -1220,10 +1220,26 @@ export type Database = {
           entered_at: string | null
           left_at: string | null
           ping_count: number | null
+          session_id: string | null
+          trip_title: string | null
           user_id: string | null
           visit_seq: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "location_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "travel_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_org_traveler_status"
+            referencedColumns: ["session_id"]
+          },
           {
             foreignKeyName: "location_logs_user_id_fkey"
             columns: ["user_id"]

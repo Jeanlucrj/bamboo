@@ -80,6 +80,7 @@ export function useTripHistory() {
 export type CountryVisitItem = {
   country_code: string;
   city: string | null;
+  trip_title: string | null;
   entered_at: string;
   left_at: string;
   duration: string;
@@ -102,7 +103,7 @@ export function useCountryVisits() {
   const carregar = useCallback(async () => {
     const { data } = await supabase
       .from('v_user_place_visits')
-      .select('country_code, city, entered_at, left_at, duration')
+      .select('country_code, city, trip_title, entered_at, left_at, duration')
       .order('entered_at', { ascending: false });
 
     // A view agrupa pings, então o Postgres tipa todas as colunas como

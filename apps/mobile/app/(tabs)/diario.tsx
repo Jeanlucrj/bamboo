@@ -178,6 +178,14 @@ export default function DiarioScreen() {
                       {v.city ?? 'Em trânsito'}
                     </Text>
                     <Text style={styles.timelineDates}>{periodo(v.entered_at, v.left_at)}</Text>
+                    {/* O nome da viagem é o que responde "cadê a de hoje?".
+                        Sem ele, duas estadas na mesma cidade em viagens
+                        diferentes ficam visualmente idênticas. */}
+                    {v.trip_title ? (
+                      <Text style={styles.timelineTrip} numberOfLines={1}>
+                        {v.trip_title}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
               ))
@@ -294,6 +302,7 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   timelineFlag: { fontSize: 28 },
   timelineCountry: { ...typo.body, color: c.text, fontWeight: '600' },
   timelineDates: { ...typo.caption, color: c.textFaint },
+  timelineTrip: { ...typo.caption, color: c.brandLight, marginTop: 2, fontWeight: '600' },
 
   footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.lg, textAlign: 'center' },
 });

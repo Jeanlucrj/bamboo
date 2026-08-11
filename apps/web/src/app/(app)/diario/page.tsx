@@ -39,7 +39,7 @@ export default async function DiarioPage() {
     // como uma linha parada com a data de entrada no topo.
     supabase
       .from('v_user_place_visits')
-      .select('country_code, city, entered_at, left_at, duration, ping_count')
+      .select('country_code, city, trip_title, entered_at, left_at, duration, ping_count')
       .order('entered_at', { ascending: false })
       .limit(200),
     supabase.rpc('get_my_trip_history'),
@@ -209,6 +209,11 @@ export default async function DiarioPage() {
                     {formatDate(v.entered_at)} — {formatDate(v.left_at)} ·{' '}
                     {humanDuration(v.duration)}
                   </p>
+                  {/* Sem o nome da viagem, duas estadas na mesma cidade em
+                      viagens diferentes ficam visualmente idênticas. */}
+                  {v.trip_title && (
+                    <p className="mt-0.5 text-xs font-semibold text-teal-400">{v.trip_title}</p>
+                  )}
                 </div>
               </li>
             ))}
