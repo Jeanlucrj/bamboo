@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import type { TravelStats, CountryVisit, TripHistoryItem } from '@sentinela/shared';
+import type { TravelStats, PlaceVisit, TripHistoryItem } from '@sentinela/shared';
 import { requireUser } from '@/lib/auth/requireUser';
 import { HistoricoViagens } from '@/components/app/HistoricoViagens';
 import { flagEmoji, formatKm, formatDate, humanDuration } from '@/lib/format';
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
  * nuláveis — inclusive as que nem selecionamos. Redigitar só as cinco quebraria
  * o `v is Visit`.
  */
-type Visit = CountryVisit & {
+type Visit = PlaceVisit & {
   country_code: string;
   entered_at: string;
   left_at: string;
@@ -34,9 +34,12 @@ export default async function DiarioPage() {
     // acesso direto revogado na migration 07. get_my_travel_stats() é
     // SECURITY DEFINER e filtra por auth.uid().
     supabase.rpc('get_my_travel_stats'),
+    // Por cidade, não por país: sem sair do próprio país a timeline de país
+    // vira um bloco só, e três dias de deslocamento entre cidades aparecem
+    // como uma linha parada com a data de entrada no topo.
     supabase
-      .from('v_user_country_visits')
-      .select('country_code, entered_at, left_at, duration, ping_count')
+      .from('v_user_place_visits')
+      .select('country_code, city, entered_at, left_at, duration, ping_count')
       .order('entered_at', { ascending: false })
       .limit(200),
     supabase.rpc('get_my_trip_history'),
@@ -65,7 +68,7 @@ export default async function DiarioPage() {
     refreshed_at: raw?.refreshed_at ?? null,
   };
 
-  const visits = ((visitRows ?? []) as CountryVisit[]).filter(
+  const visits = ((visitRows ?? []) as PlaceVisit[]).filter(
     (v): v is Visit =>
       v.country_code !== null && v.entered_at !== null && v.left_at !== null,
   );
@@ -199,7 +202,9 @@ export default async function DiarioPage() {
                 </div>
 
                 <div className="flex-1 pb-6">
-                  <p className="text-sm font-semibold text-white">{v.country_code}</p>
+                  <p className="text-sm font-semibold text-white">
+                    {v.city ?? 'Em trânsito'}
+                  </p>
                   <p className="text-xs text-slate-500">
                     {formatDate(v.entered_at)} — {formatDate(v.left_at)} ·{' '}
                     {humanDuration(v.duration)}

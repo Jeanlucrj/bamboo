@@ -66,6 +66,16 @@ export type OrgTravelerStatus = ViewRow<'v_org_traveler_status'>;
 export type CountryVisit = ViewRow<'v_user_country_visits'>;
 
 /**
+ * Uma parada na timeline — por CIDADE.
+ *
+ * `CountryVisit` agrupa por país e continua servindo o passaporte e as
+ * contagens do Diário. Para a linha do tempo ela não serve: quem não sai do
+ * próprio país vira um bloco só, e o deslocamento entre cidades — que é a maior
+ * parte de qualquer viagem — não aparece.
+ */
+export type PlaceVisit = ViewRow<'v_user_place_visits'>;
+
+/**
  * Saúde dos aparelhos de uma organização.
  *
  * Veio de uma view e virou função: como view, precisava ser SECURITY DEFINER

@@ -79,18 +79,21 @@ export function useTripHistory() {
 
 export type CountryVisitItem = {
   country_code: string;
+  city: string | null;
   entered_at: string;
   left_at: string;
   duration: string;
 };
 
 /**
- * Timeline de países visitados.
+ * Timeline de lugares visitados.
  *
- * Diferente das estatísticas, esta vem de uma view NORMAL — o dado é sempre o
- * de agora, sem esperar o cron. Mesmo assim a timeline parecia travada, e pelo
- * mesmo motivo: `useEffect(..., [])` buscava uma vez e a aba nunca remontava.
- * O ping novo chegava ao banco e não à tela.
+ * Agora por CIDADE (`v_user_place_visits`), não por país. A de país mostrava
+ * um bloco só para quem não sai do próprio país — três dias de deslocamento
+ * entre cidades viravam uma linha parada, com a data de entrada no topo. Era
+ * isso que parecia "timeline travada".
+ *
+ * O dado vem de view normal, sempre atual, sem esperar o cron das estatísticas.
  */
 export function useCountryVisits() {
   const [visits, setVisits] = useState<CountryVisitItem[]>([]);
@@ -98,8 +101,8 @@ export function useCountryVisits() {
 
   const carregar = useCallback(async () => {
     const { data } = await supabase
-      .from('v_user_country_visits')
-      .select('country_code, entered_at, left_at, duration')
+      .from('v_user_place_visits')
+      .select('country_code, city, entered_at, left_at, duration')
       .order('entered_at', { ascending: false });
 
     // A view agrupa pings, então o Postgres tipa todas as colunas como

@@ -171,10 +171,13 @@ export default function DiarioScreen() {
                 <View key={`${v.country_code}-${v.entered_at}-${i}`} style={styles.timelineRow}>
                   <Text style={styles.timelineFlag}>{bandeiraEmoji(v.country_code)}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.timelineCountry}>{v.country_code}</Text>
-                    <Text style={styles.timelineDates}>
-                      {fmt(v.entered_at)} — {fmt(v.left_at)}
+                    {/* A cidade no lugar da sigla. "BR" não é um lugar: não
+                        distingue três dias em São José dos Campos de três dias
+                        atravessando o país. */}
+                    <Text style={styles.timelineCountry}>
+                      {v.city ?? 'Em trânsito'}
                     </Text>
+                    <Text style={styles.timelineDates}>{periodo(v.entered_at, v.left_at)}</Text>
                   </View>
                 </View>
               ))
@@ -202,6 +205,32 @@ function formatKm(km: number): string {
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+/**
+ * Período de uma parada, no formato mais curto que ainda informa.
+ *
+ * Antes era `fmt(entrou) — fmt(saiu)`, que numa parada do mesmo dia repetia a
+ * data duas vezes ("08 de ago — 08 de ago") e escondia a informação útil, que
+ * é a hora. E numa parada em curso o "fim" parecia data de saída, dando a
+ * impressão de coisa encerrada — foi o que fez a timeline parecer travada no
+ * dia 8 enquanto ela ia até hoje.
+ */
+function periodo(entrou: string, saiu: string): string {
+  const a = new Date(entrou);
+  const b = new Date(saiu);
+  const hora = (d: Date) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  // Ainda ali: nenhum ping novo em menos de 5 h significa que a parada segue —
+  // o app só envia a cada 4 h quando o aparelho está parado.
+  const emCurso = Date.now() - b.getTime() < 5 * 60 * 60 * 1000;
+
+  if (a.toDateString() === b.toDateString()) {
+    return emCurso
+      ? `${fmt(entrou)}, desde ${hora(a)}`
+      : `${fmt(entrou)}, ${hora(a)} — ${hora(b)}`;
+  }
+  return emCurso ? `desde ${fmt(entrou)}` : `${fmt(entrou)} — ${fmt(saiu)}`;
 }
 
 /** Com hora, porque "hoje" sozinho não diz se foi há 5 minutos ou há 50. */

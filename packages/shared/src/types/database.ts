@@ -1212,6 +1212,41 @@ export type Database = {
           },
         ]
       }
+      v_user_place_visits: {
+        Row: {
+          city: string | null
+          country_code: string | null
+          duration: string | null
+          entered_at: string | null
+          left_at: string | null
+          ping_count: number | null
+          user_id: string | null
+          visit_seq: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_user_travel_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "location_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_org_traveler_status"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_device_stats: {
