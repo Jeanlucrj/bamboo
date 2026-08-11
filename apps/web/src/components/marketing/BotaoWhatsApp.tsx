@@ -47,9 +47,11 @@ export function BotaoWhatsApp() {
       const delta = y - ultimoY;
       ultimoY = y;
 
-      // Teto de 22 px: sem ele, um "fim da página" pela barra de rolagem
-      // arremessaria o botão para fora da tela.
-      alvo = Math.max(-22, Math.min(22, delta * 0.55));
+      // Fator e teto subiram (era 0,55 e 22 px): no valor anterior a rolagem
+      // normal produzia uns poucos pixels, que somem contra a animação de
+      // repouso. 1,1 e 46 px fazem o empurrão ser visível sem descolar o botão
+      // do canto.
+      alvo = Math.max(-46, Math.min(46, delta * 1.1));
 
       clearTimeout(parado);
       parado = window.setTimeout(() => {
@@ -63,6 +65,10 @@ export function BotaoWhatsApp() {
       atual += (alvo - atual) * 0.12;
       if (Math.abs(atual) < 0.01) atual = 0;
       el!.style.setProperty('--deslocamento', `${atual.toFixed(2)}px`);
+      // A inclinação sai do mesmo valor: num canto vazio da tela, deslocamento
+      // vertical puro é difícil de perceber sem ponto de referência. O giro dá
+      // esse referencial e é o que faz o movimento ser lido como movimento.
+      el!.style.setProperty('--giro', `${(atual * 0.35).toFixed(2)}deg`);
       quadro = requestAnimationFrame(animar);
     }
 

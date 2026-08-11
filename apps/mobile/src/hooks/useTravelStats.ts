@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { TravelStats, TripHistoryItem } from '@sentinela/shared';
 import { supabase } from '../services/supabase';
@@ -7,32 +7,44 @@ import { supabase } from '../services/supabase';
  * Lê mv_user_travel_stats via RPC (materialized view não suporta RLS,
  * então o filtro por auth.uid() mora dentro da função SECURITY DEFINER).
  *
- * Os números são atualizados de hora em hora pelo cron `refresh-analytics`.
- * Somar ST_Distance sobre location_logs a cada abertura de tela seria
- * inviável na tabela que mais cresce do sistema.
+ * Os números são recalculados de hora em hora pelo cron `refresh-analytics`.
+ * Somar ST_Distance sobre location_logs a cada abertura de tela seria inviável
+ * na tabela que mais cresce do sistema.
+ *
+ * RECARREGA A CADA FOCO, e antes não recarregava nunca.
+ *
+ * Era `useEffect(..., [])`: buscava uma vez, na montagem. Só que aba de
+ * navegação por baixo fica MONTADA em memória — trocar de aba e voltar não
+ * remonta nada. Na prática os números congelavam até o app ser fechado por
+ * completo.
+ *
+ * E o efeito colateral era pior que dado velho: `useTripHistory`, na mesma
+ * tela, recarrega por foco. Então "Minhas viagens" mostrava a contagem nova
+ * enquanto países, cidades e quilômetros mostravam a antiga — dois números
+ * discordando lado a lado, o que faz o usuário duvidar dos dois.
  */
 export function useTravelStats() {
   const [stats, setStats] = useState<TravelStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      const { data, error } = await supabase.rpc('get_my_travel_stats');
-      if (!alive) return;
-      if (error) setError(error.message);
-      else setStats((data as TravelStats[])?.[0] ?? null);
-      setLoading(false);
-    })();
-
-    return () => {
-      alive = false;
-    };
+  const carregar = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_my_travel_stats');
+    if (error) setError(error.message);
+    else {
+      setError(null);
+      setStats((data as TravelStats[])?.[0] ?? null);
+    }
+    setLoading(false);
   }, []);
 
-  return { stats, loading, error };
+  useFocusEffect(
+    useCallback(() => {
+      carregar();
+    }, [carregar]),
+  );
+
+  return { stats, loading, error, recarregar: carregar };
 }
 
 /**
@@ -72,39 +84,45 @@ export type CountryVisitItem = {
   duration: string;
 };
 
-/** Timeline de países visitados, para o diário de bordo. */
+/**
+ * Timeline de países visitados.
+ *
+ * Diferente das estatísticas, esta vem de uma view NORMAL — o dado é sempre o
+ * de agora, sem esperar o cron. Mesmo assim a timeline parecia travada, e pelo
+ * mesmo motivo: `useEffect(..., [])` buscava uma vez e a aba nunca remontava.
+ * O ping novo chegava ao banco e não à tela.
+ */
 export function useCountryVisits() {
   const [visits, setVisits] = useState<CountryVisitItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data } = await supabase
-        .from('v_user_country_visits')
-        .select('country_code, entered_at, left_at, duration')
-        .order('entered_at', { ascending: false });
-      if (!alive) return;
+  const carregar = useCallback(async () => {
+    const { data } = await supabase
+      .from('v_user_country_visits')
+      .select('country_code, entered_at, left_at, duration')
+      .order('entered_at', { ascending: false });
 
-      // A view agrupa pings, então o Postgres tipa todas as colunas como
-      // nuláveis mesmo com o group by garantindo valor. Descartar a linha
-      // incompleta é melhor que renderizar "undefined" na timeline do diário —
-      // e sem país a entrada não significa nada de qualquer forma.
-      setVisits(
-        (data ?? []).filter(
-          (v): v is CountryVisitItem =>
-            v.country_code !== null &&
-            v.entered_at !== null &&
-            v.left_at !== null &&
-            v.duration !== null,
-        ),
-      );
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
+    // A view agrupa pings, então o Postgres tipa todas as colunas como
+    // nuláveis mesmo com o group by garantindo valor. Descartar a linha
+    // incompleta é melhor que renderizar "undefined" na timeline do diário —
+    // e sem país a entrada não significa nada de qualquer forma.
+    setVisits(
+      (data ?? []).filter(
+        (v): v is CountryVisitItem =>
+          v.country_code !== null &&
+          v.entered_at !== null &&
+          v.left_at !== null &&
+          v.duration !== null,
+      ),
+    );
+    setLoading(false);
   }, []);
 
-  return { visits, loading };
+  useFocusEffect(
+    useCallback(() => {
+      carregar();
+    }, [carregar]),
+  );
+
+  return { visits, loading, recarregar: carregar };
 }

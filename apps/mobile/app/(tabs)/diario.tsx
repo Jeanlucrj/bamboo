@@ -1,4 +1,7 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { useState } from 'react';
+import {
+  View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable, RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { bandeiraEmoji } from '@sentinela/shared';
@@ -20,9 +23,16 @@ export default function DiarioScreen() {
   const c = useColors();
   const styles = useStyles(criarEstilos);
   const router = useRouter();
-  const { stats, loading } = useTravelStats();
-  const { visits, loading: loadingVisits } = useCountryVisits();
-  const { trips } = useTripHistory();
+  const { stats, loading, recarregar: recarregarStats } = useTravelStats();
+  const { visits, loading: loadingVisits, recarregar: recarregarVisitas } = useCountryVisits();
+  const { trips, recarregar: recarregarViagens } = useTripHistory();
+  const [atualizando, setAtualizando] = useState(false);
+
+  async function puxarParaAtualizar() {
+    setAtualizando(true);
+    await Promise.all([recarregarStats(), recarregarVisitas(), recarregarViagens()]);
+    setAtualizando(false);
+  }
 
   if (loading) {
     return (
@@ -54,12 +64,32 @@ export default function DiarioScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={atualizando}
+            onRefresh={puxarParaAtualizar}
+            tintColor={c.brandLight}
+          />
+        }
+      >
         <Identidade />
         <Text style={styles.title}>Diário de bordo</Text>
         <Text style={styles.subtitle}>
           Escrito sozinho a partir do seu GPS e dos seus check-ins.
         </Text>
+
+        {/* Quando os números foram calculados, no TOPO e não no rodapé.
+            Países, cidades e quilômetros vêm de uma tabela recalculada de hora
+            em hora — somar distância sobre todos os pings a cada abertura seria
+            inviável. Sem esta linha visível, um ping recente que ainda não
+            entrou na conta parece número errado, não número de uma hora atrás. */}
+        {stats?.refreshed_at ? (
+          <Text style={styles.calculado}>
+            Números calculados {fmtHora(stats.refreshed_at)} · recalculados a cada hora
+          </Text>
+        ) : null}
 
         {/* Fora do `hasData`: as viagens existem independentemente de haver
             ping de GPS. Antes, quem tivesse viajado com o rastreamento
@@ -150,9 +180,13 @@ export default function DiarioScreen() {
               ))
             )}
 
+            {/* A nota de "atualizado em" subiu para o topo, com hora. Aqui no
+                pé ela chegava depois de a pessoa já ter desconfiado do número —
+                e sem hora, "atualizado 11/08" não distingue 5 minutos de 5
+                horas atrás. */}
             <Text style={styles.footnote}>
-              Atualizado {stats.refreshed_at ? fmt(stats.refreshed_at) : '—'}. Os números são
-              recalculados de hora em hora.
+              Quilômetros contam só deslocamento real entre pontos: menos de 50 m é tremida de GPS
+              e não entra. Puxe a tela para baixo para atualizar.
             </Text>
           </>
         )}
@@ -170,11 +204,20 @@ function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' });
 }
 
+/** Com hora, porque "hoje" sozinho não diz se foi há 5 minutos ou há 50. */
+function fmtHora(iso: string): string {
+  const d = new Date(iso);
+  const hoje = new Date().toDateString() === d.toDateString();
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return hoje ? `hoje às ${hora}` : `${fmt(iso)} às ${hora}`;
+}
+
 const criarEstilos = (c: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
   title: { ...typo.h1, color: c.text },
-  subtitle: { ...typo.small, color: c.textMuted, marginBottom: spacing.md },
+  subtitle: { ...typo.small, color: c.textMuted, marginBottom: 2 },
+  calculado: { ...typo.caption, color: c.textFaint, marginBottom: spacing.md, lineHeight: 16 },
 
   empty: { padding: spacing.xl, alignItems: 'center' },
   emptyText: { ...typo.body, color: c.textFaint, textAlign: 'center', lineHeight: 24 },

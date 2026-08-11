@@ -437,20 +437,27 @@ html[data-theme="light"] .gradient-text-hero {
    sobrescrevem. Com o embalo no pai e a inércia no filho, os dois se
    compõem naturalmente — e o `scale` do hover ainda cabe por cima. */
 
+/* Amplitude e ritmo já foram -7px em 3,2 s. No papel parecia elegante; na tela
+   era imperceptível — do tamanho de um erro de renderização, e mais fácil de
+   confundir com nada do que de ler como movimento.
+   -16 px em 2,4 s é o mínimo que se enxerga sem procurar. */
 @keyframes flutuar {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-7px); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-16px) rotate(-3deg); }
 }
 
 .flutuante {
-  animation: flutuar 3.2s ease-in-out infinite;
+  animation: flutuar 2.4s ease-in-out infinite;
 }
 
 /* Deslocamento vindo da rolagem. O valor é escrito pelo JS a cada quadro; aqui
    só declaramos onde ele entra. Sem transição CSS de propósito: quem suaviza é
    a interpolação no requestAnimationFrame, e as duas juntas brigariam. */
 .inercia {
-  transform: translateY(var(--deslocamento, 0px));
+  /* A rotação acompanha o deslocamento e é o que mais denuncia o movimento:
+     deslocamento vertical puro, num canto vazio da tela, o olho tem
+     dificuldade de perceber sem ponto de referência. Inclinar dá o referencial. */
+  transform: translateY(var(--deslocamento, 0px)) rotate(var(--giro, 0deg));
   will-change: transform;
 }
 
