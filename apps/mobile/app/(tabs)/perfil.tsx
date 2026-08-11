@@ -4,6 +4,7 @@ import { supabase } from '../../src/services/supabase';
 import { stopBackgroundTracking } from '../../src/services/location/backgroundLocation';
 import { revokeThisDevice } from '../../src/services/device';
 import { Identidade } from '../../src/components/Identidade';
+import { versaoEmExecucao } from '../../src/services/atualizacao';
 import { spacing, type as typo, useColors, useTheme } from '../../src/theme';
 import { Tela, Cartao, Linha, Rotulo } from '../../src/components/Ui';
 
@@ -13,6 +14,7 @@ export default function PerfilScreen() {
   const router = useRouter();
   const c = useColors();
   const { pref } = useTheme();
+  const versao = versaoEmExecucao();
 
   function sair() {
     Alert.alert(
@@ -154,6 +156,21 @@ export default function PerfilScreen() {
         >
           Seus dados de localização são apagados automaticamente após 24 meses. Os agregados do
           diário de bordo permanecem — eles não permitem reconstituir trajeto.
+        </Text>
+
+        {/* Identificação do pacote em execução.
+            Existe porque "instalei e não mudou nada" é indistinguível de
+            "a atualização não chegou" — e sem um número na tela, a única
+            saída é adivinhar. `embutido` significa que o app está rodando o
+            código que veio no instalador, sem nenhuma atualização aplicada. */}
+        <Text
+          style={{
+            ...typo.caption, color: c.textFaint,
+            lineHeight: 18, marginTop: spacing.md, opacity: 0.7,
+          }}
+        >
+          Versão {versao.id}
+          {versao.embutido ? ' (do instalador)' : ' (atualizado pelo ar)'} · canal {versao.canal}
         </Text>
       </ScrollView>
     </Tela>

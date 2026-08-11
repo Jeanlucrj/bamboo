@@ -25,6 +25,7 @@ import { flushQueue } from '../src/services/location/pingQueue';
 import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
+import { aplicarAtualizacaoNaAbertura } from '../src/services/atualizacao';
 import { Abertura } from '../src/components/Abertura';
 import { TelaBloqueio } from '../src/components/TelaBloqueio';
 import {
@@ -55,6 +56,21 @@ function RootNavigator() {
   const [ready, setReady] = useState(false);
   const router = useRouter();
   const segments = useSegments();
+
+  /**
+   * Aplica a atualização pelo ar ANTES de qualquer outra coisa.
+   *
+   * O padrão do expo-updates baixa o pacote novo e só o ativa na abertura
+   * seguinte — então uma correção publicada exigia abrir o app duas vezes, sem
+   * nada na tela explicando isso. Aqui ela entra na mesma abertura, escondida
+   * atrás da tela inicial que já existe.
+   *
+   * Se houver atualização, `reloadAsync` reinicia o runtime e este efeito nem
+   * termina: o app volta do zero já corrigido.
+   */
+  useEffect(() => {
+    aplicarAtualizacaoNaAbertura();
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
