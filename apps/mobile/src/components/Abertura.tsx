@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Easing, Image, StyleSheet } from 'react-native';
 
+// Paleta escura fixa, e não `useColors()`: esta tela cobre a splash NATIVA, que
+// é sempre escura porque seu fundo é compilado no instalador. Segui-la ao tema
+// claro faria a abertura piscar branco por cima de um fundo preto do sistema.
+import { DARK } from '../theme/palettes';
+
 /**
  * Tela de abertura animada.
  *
@@ -131,11 +136,26 @@ export function Abertura({ pronto, onFim }: { pronto: boolean; onFim: () => void
 const TAM_LOGO = 132;
 const TAM_ORBITA = TAM_LOGO + 54;
 
+/**
+ * PRETO, e não mais o #070B14 da splash nativa.
+ *
+ * O comentário antigo aqui dizia "mesmo fundo da splash nativa — é o que torna
+ * a troca imperceptível", e estava certo enquanto o app inteiro era azul-noite.
+ * Com o conteúdo em preto puro, manter esta tela em azul só mudava o lugar do
+ * salto: em vez de um degrau quase invisível entre a splash do sistema e esta,
+ * o salto acontecia depois, no instante em que as abas aparecem — que é o
+ * momento mais visível de todos, porque é onde o olho já está esperando algo.
+ *
+ * O degrau que sobra agora é #070B14 -> #000 durante o logo animado, e ele
+ * some de vez no próximo instalador: `app.json` já está com #000000, mas o
+ * fundo da splash nativa é compilado e não viaja pelo ar.
+ */
+const FUNDO = '#000000';
+
 const styles = StyleSheet.create({
   tela: {
     ...StyleSheet.absoluteFillObject,
-    // Mesmo fundo da splash nativa — é o que torna a troca imperceptível.
-    backgroundColor: '#070B14',
+    backgroundColor: FUNDO,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999,
@@ -151,7 +171,7 @@ const styles = StyleSheet.create({
     width: TAM_LOGO * 1.5,
     height: TAM_LOGO * 1.5,
     borderRadius: TAM_LOGO,
-    backgroundColor: '#14B8A6',
+    backgroundColor: DARK.brandLight,
   },
   orbita: {
     position: 'absolute',
@@ -172,14 +192,14 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '800',
     letterSpacing: -0.8,
-    color: '#F1F5F9',
+    color: DARK.text,
   },
-  nomeLeve: { fontWeight: '300', color: '#94A3B8' },
+  nomeLeve: { fontWeight: '300', color: DARK.textMuted },
   assinatura: {
     marginTop: 8,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.4,
-    color: '#475569',
+    color: DARK.textFaint,
   },
 });

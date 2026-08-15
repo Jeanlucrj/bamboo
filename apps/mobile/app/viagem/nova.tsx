@@ -144,7 +144,7 @@ export default function NovaViagem() {
 
           <Pressable style={styles.primary} disabled={saving} onPress={closeActive}>
             {saving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={c.bg} />
             ) : (
               <Text style={styles.primaryLabel}>Encerrar “{active.title}”</Text>
             )}
@@ -239,7 +239,7 @@ export default function NovaViagem() {
 
       <Pressable style={styles.primary} disabled={saving} onPress={submit}>
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={c.bg} />
         ) : (
           <Text style={styles.primaryLabel}>Iniciar viagem</Text>
         )}
@@ -341,26 +341,32 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   rowTitle: { ...typo.body, color: c.text, fontWeight: '600' },
   rowSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 17 },
 
+  // Âmbar TINGIDO, e não o marrom #3A2A0C cravado.
+  //
+  // Aquele marrom era uma cor sólida escolhida para um fundo azul-noite: sobre
+  // preto puro ele vira uma mancha suja, e no tema claro sempre foi uma caixa
+  // marrom com texto amarelo-pálido — ilegível desde que o tema claro existe.
+  // Um âmbar a 14% funciona nos dois, porque compõe com o fundo em vez de
+  // ignorá-lo.
   notice: {
     marginTop: spacing.md,
-    backgroundColor: '#3A2A0C',
-    borderRadius: radius.md,
+    backgroundColor: 'rgba(251, 191, 36, 0.14)',
+    borderRadius: radius.bloco,
     padding: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: c.grace,
   },
-  noticeTitle: { ...typo.small, color: '#FDE68A', fontWeight: '700' },
-  noticeText: { ...typo.caption, color: '#FDE68A', marginTop: 4, lineHeight: 18 },
+  noticeTitle: { ...typo.small, color: c.grace, fontWeight: '700' },
+  noticeText: { ...typo.caption, color: c.textMuted, marginTop: 4, lineHeight: 18 },
 
   primary: {
     height: 56,
     marginTop: spacing.xl,
-    borderRadius: radius.md,
-    backgroundColor: c.brand,
+    borderRadius: radius.pill,
+    backgroundColor: c.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
+  // Tinta do fundo sobre o botão claro: branco sobre branco sumia no tema claro.
+  primaryLabel: { ...typo.body, color: c.bg, fontWeight: '800' },
   link: {
     ...typo.body, color: c.brandLight, fontWeight: '600',
     textAlign: 'center', marginTop: spacing.lg,

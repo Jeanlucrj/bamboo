@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Pressable, StyleSheet } from 'react-native';
 import { pedirBiometria } from '../services/bloqueio';
 import { useBloqueioStore } from '../stores/bloqueio';
+import { DARK } from '../theme/palettes';
 
 /**
  * Tela de desbloqueio.
@@ -103,10 +104,17 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
 
 const TAM = 108;
 
+/**
+ * Paleta escura fixa, como na `Abertura`.
+ *
+ * Esta tela nasce por cima da abertura, antes de qualquer conteúdo, e as duas
+ * precisam ser o mesmo fundo — a abertura sai com um fade e revela esta, e um
+ * degrau de cor no meio desse fade denuncia que eram duas telas empilhadas.
+ */
 const styles = StyleSheet.create({
   tela: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#070B14',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -116,23 +124,25 @@ const styles = StyleSheet.create({
   halo: {
     position: 'absolute',
     width: TAM * 1.4, height: TAM * 1.4, borderRadius: TAM,
-    backgroundColor: '#14B8A6',
+    backgroundColor: DARK.brandLight,
   },
   logo: { width: TAM, height: TAM, resizeMode: 'contain' },
   titulo: {
     marginTop: 28, fontSize: 22, fontWeight: '800',
-    letterSpacing: -0.5, color: '#F1F5F9', textAlign: 'center',
+    letterSpacing: -0.5, color: DARK.text, textAlign: 'center',
   },
   corpo: {
     marginTop: 10, fontSize: 14, lineHeight: 21,
-    color: '#94A3B8', textAlign: 'center', maxWidth: 300,
+    color: DARK.textMuted, textAlign: 'center', maxWidth: 300,
   },
   acoes: { marginTop: 36, width: '100%', maxWidth: 340, gap: 8 },
+  // Pílula branca, como o botão principal do resto do app. O teal preenchido
+  // era a única coisa dessa forma no produto inteiro depois do redesenho.
   primario: {
-    height: 56, borderRadius: 20, backgroundColor: '#14B8A6',
+    height: 56, borderRadius: 999, backgroundColor: DARK.text,
     alignItems: 'center', justifyContent: 'center',
   },
-  primarioLabel: { fontSize: 16, fontWeight: '800', color: '#05201D' },
+  primarioLabel: { fontSize: 16, fontWeight: '800', color: '#000000' },
   secundario: { height: 48, alignItems: 'center', justifyContent: 'center' },
-  secundarioLabel: { fontSize: 14, fontWeight: '600', color: '#64748B' },
+  secundarioLabel: { fontSize: 14, fontWeight: '600', color: DARK.textFaint },
 });

@@ -204,7 +204,7 @@ export default function NovoContato() {
 
       <Pressable style={styles.primary} disabled={saving} onPress={submit}>
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={c.bg} />
         ) : (
           <Text style={styles.primaryLabel}>Salvar contato</Text>
         )}
@@ -256,16 +256,16 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   segmented: {
     flexDirection: 'row',
     backgroundColor: c.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
+    // Pílula sem contorno, igual ao `Segmentado` da aba Viagem: os dois são o
+    // mesmo controle e apareciam com formas diferentes.
+    borderRadius: radius.pill,
     padding: 4,
     gap: 4,
   },
-  segment: { flex: 1, height: 42, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  segmentActive: { backgroundColor: c.brand },
+  segment: { flex: 1, height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  segmentActive: { backgroundColor: c.text },
   segmentLabel: { ...typo.small, color: c.textMuted, fontWeight: '600' },
-  segmentLabelActive: { color: '#fff' },
+  segmentLabelActive: { color: c.bg, fontWeight: '800' },
 
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepperBtn: {
@@ -301,5 +301,5 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
+  primaryLabel: { ...typo.body, color: c.bg, fontWeight: '800' },
 });

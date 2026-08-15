@@ -311,12 +311,20 @@ const styles = StyleSheet.create({
 
   primary: {
     height: 60,
-    borderRadius: radius.md,
+    // Pílula, como o resto do app depois do redesenho.
+    borderRadius: radius.pill,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryLabel: { ...typo.h2, color: colors.alert },
+  // Vermelho ESCURO, e não `colors.alert`.
+  //
+  // O `alert` da paleta foi clareado para #F87171 no redesenho, porque lá ele
+  // aparece como texto e traço sobre preto. Aqui ele é tinta sobre um botão
+  // BRANCO, e nessa combinação cai para cerca de 2,5:1 de contraste — ilegível.
+  // O único botão que encerra um alarme em curso não pode depender de o
+  // usuário estar num ambiente com pouca luz para ser lido.
+  primaryLabel: { ...typo.h2, color: '#991B1B' },
 
   secondary: {
     height: 52,

@@ -113,11 +113,11 @@ export default function PermissoesNotificacao() {
           onPress={pedir}
           disabled={pedindo}
           style={{
-            height: 56, borderRadius: radius.md, backgroundColor: c.brand,
+            height: 56, borderRadius: radius.pill, backgroundColor: c.text,
             alignItems: 'center', justifyContent: 'center', opacity: pedindo ? 0.6 : 1,
           }}
         >
-          <Text style={{ ...typo.body, color: '#fff', fontWeight: '700' }}>
+          <Text style={{ ...typo.body, color: c.bg, fontWeight: '800' }}>
             {pedindo ? 'Aguardando…' : 'Ativar notificações'}
           </Text>
         </Pressable>

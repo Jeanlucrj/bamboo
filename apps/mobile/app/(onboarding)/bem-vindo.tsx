@@ -77,8 +77,8 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   stepBody: { ...typo.small, color: c.textMuted, marginTop: 2, lineHeight: 20 },
   footer: { padding: spacing.lg },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
+    height: 56, borderRadius: radius.pill, backgroundColor: c.text,
     alignItems: 'center', justifyContent: 'center',
   },
-  primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
+  primaryLabel: { ...typo.body, color: c.bg, fontWeight: '800' },
 });

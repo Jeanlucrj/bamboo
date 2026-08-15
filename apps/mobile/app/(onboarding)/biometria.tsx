@@ -150,14 +150,14 @@ export default function OfertaBiometria() {
           onPress={ativar}
           disabled={ligando}
           style={{
-            height: 56, borderRadius: radius.md, backgroundColor: c.brand,
+            height: 56, borderRadius: radius.pill, backgroundColor: c.text,
             alignItems: 'center', justifyContent: 'center', opacity: ligando ? 0.6 : 1,
           }}
         >
           {ligando ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={c.bg} />
           ) : (
-            <Text style={{ ...typo.body, color: '#fff', fontWeight: '700' }}>
+            <Text style={{ ...typo.body, color: c.bg, fontWeight: '800' }}>
               Ativar {metodo.toLowerCase()}
             </Text>
           )}

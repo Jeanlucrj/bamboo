@@ -142,22 +142,22 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   bulletTitle: { ...typo.body, color: c.text, fontWeight: '600' },
   bulletBody: { ...typo.small, color: c.textMuted, marginTop: 2, lineHeight: 20 },
 
+  // Mesmo tratamento do aviso da tela de nova viagem: âmbar tingido em vez do
+  // marrom sólido, que sobre preto virava mancha e no tema claro era ilegível.
   warn: {
     marginTop: spacing.lg,
-    backgroundColor: '#3A2A0C',
-    borderRadius: radius.md,
+    backgroundColor: 'rgba(251, 191, 36, 0.14)',
+    borderRadius: radius.bloco,
     padding: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: c.grace,
   },
-  warnText: { ...typo.small, color: '#FDE68A', lineHeight: 20 },
+  warnText: { ...typo.small, color: c.textMuted, lineHeight: 20 },
   warnLink: { ...typo.small, color: c.grace, fontWeight: '700', marginTop: spacing.sm },
 
   footer: { padding: spacing.lg, gap: spacing.md },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
+    height: 56, borderRadius: radius.pill, backgroundColor: c.text,
     alignItems: 'center', justifyContent: 'center',
   },
-  primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
+  primaryLabel: { ...typo.body, color: c.bg, fontWeight: '800' },
   skip: { ...typo.small, color: c.textFaint, textAlign: 'center' },
 });

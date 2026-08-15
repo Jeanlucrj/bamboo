@@ -65,7 +65,7 @@ export default function Login() {
               disabled={!email || busy}
               onPress={sendMagicLink}
             >
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryLabel}>Receber link de acesso</Text>}
+              {busy ? <ActivityIndicator color={c.bg} /> : <Text style={styles.primaryLabel}>Receber link de acesso</Text>}
             </Pressable>
 
             {/* Aqui existiam "Continuar com Google" e "Continuar com Apple"
@@ -110,10 +110,10 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   },
   error: { ...typo.small, color: c.alert, marginTop: spacing.sm },
   primary: {
-    height: 56, borderRadius: radius.md, backgroundColor: c.brand,
+    height: 56, borderRadius: radius.pill, backgroundColor: c.text,
     alignItems: 'center', justifyContent: 'center', marginTop: spacing.md,
   },
-  primaryLabel: { ...typo.body, color: '#fff', fontWeight: '700' },
+  primaryLabel: { ...typo.body, color: c.bg, fontWeight: '800' },
   sentBox: { backgroundColor: c.surface, borderRadius: radius.md, padding: spacing.lg },
   sentTitle: { ...typo.h2, color: c.text },
   sentBody: { ...typo.small, color: c.textMuted, marginTop: spacing.sm, lineHeight: 20 },

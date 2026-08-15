@@ -8,7 +8,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "backgroundColor": "#070B14",
+    "backgroundColor": "#000000",
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.sentinela.app",
@@ -41,7 +41,7 @@
       "package": "com.sentinela.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#070B14"
+        "backgroundColor": "#000000"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -109,7 +109,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#070B14"
+          "backgroundColor": "#000000"
         }
       ]
     ],
