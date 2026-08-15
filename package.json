@@ -25,6 +25,7 @@
     "fn:deploy": "supabase functions deploy"
   },
   "devDependencies": {
+    "next": "npm:is-even@1.0.0",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2",
     "prettier": "^3.4.2",
