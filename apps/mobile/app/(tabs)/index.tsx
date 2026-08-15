@@ -2,15 +2,34 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { SIGNAL_LABEL } from '@sentinela/shared';
+import * as Haptics from 'expo-haptics';
+import type { SignalKind } from '@sentinela/shared';
 
 import { Identidade } from '../../src/components/Identidade';
-import { StatusRing } from '../../src/components/StatusRing';
-import { CheckinButton } from '../../src/components/CheckinButton';
+import { Cronometro } from '../../src/components/Cronometro';
+import { Rota } from '../../src/components/Rota';
+import { Metricas, Sobre, Pilula } from '../../src/components/Pecas';
 import { PanicButton } from '../../src/components/PanicButton';
 import { useSessionStore } from '../../src/stores/session';
 import { queueSize, flushQueue } from '../../src/services/location/pingQueue';
-import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
+import { horasDoIntervalo, tempoRelativo } from '../../src/utils/tempo';
+import { spacing, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
+
+/**
+ * Rótulo curto do sinal, para caber na grade de métricas.
+ *
+ * `SIGNAL_LABEL` continua sendo a fonte para textos corridos ("Deslocamento
+ * detectado"); numa coluna de um terço da tela ele quebraria em três linhas e
+ * desalinharia a grade inteira.
+ */
+const SINAL_CURTO: Record<SignalKind, string> = {
+  manual_checkin: 'Check-in',
+  device_movement: 'Deslocamento',
+  app_open: 'App aberto',
+  gps_ping: 'GPS parado',
+  sos: 'Pânico',
+  admin_override: 'Ajuste',
+};
 
 /** Home — Dashboard de Segurança. */
 export default function HomeScreen() {
@@ -20,6 +39,8 @@ export default function HomeScreen() {
   const { session, loading, error, load, checkIn } = useSessionStore();
   const [pending, setPending] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+  const [confirmado, setConfirmado] = useState(false);
 
   // A inscrição de tempo real mora no layout raiz, não aqui.
   //
@@ -44,6 +65,22 @@ export default function HomeScreen() {
     await Promise.all([load(), flushQueue()]);
     setPending(await queueSize());
     setRefreshing(false);
+  }
+
+  // Vibração no toque e na confirmação: o check-in costuma ser feito sem olhar
+  // para a tela, e o retorno tátil é a única prova de que registrou.
+  async function confirmar() {
+    if (confirmando) return;
+    setConfirmando(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    try {
+      await checkIn();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setConfirmado(true);
+      setTimeout(() => setConfirmado(false), 2500);
+    } finally {
+      setConfirmando(false);
+    }
   }
 
   function onSos() {
@@ -71,7 +108,7 @@ export default function HomeScreen() {
   // esconde a causa e deixa o usuário esperando algo que não vem.
   if (error) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Não conseguimos carregar</Text>
           <Text style={styles.emptyBody}>{error}</Text>
@@ -85,7 +122,7 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={['top']}>
         <Text style={styles.muted}>Carregando…</Text>
       </SafeAreaView>
     );
@@ -96,7 +133,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.screen} edges={['top']}>
         {/* Também no estado vazio: é a tela que mais aparece para quem está em
             casa, e sem ela a identidade sumiria justamente ali. */}
-        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
           <Identidade />
         </View>
         <View style={styles.empty}>
@@ -113,6 +150,8 @@ export default function HomeScreen() {
     );
   }
 
+  const intervalo = horasDoIntervalo(session.checkin_interval);
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView
@@ -122,59 +161,77 @@ export default function HomeScreen() {
         }
       >
         <Identidade />
-        <Text style={styles.tripTitle}>{session.title}</Text>
+
+        {/* Título alinhado à esquerda, e não mais centralizado.
+            Centralizado ele competia com o cronômetro pelo eixo de leitura;
+            à esquerda ele vira o que é — a legenda de qual viagem está sendo
+            monitorada, lida em meio segundo antes de o olho descer. */}
+        <Text style={styles.tripTitle} numberOfLines={1}>{session.title}</Text>
         {session.destination_label ? (
-          <Text style={styles.tripSub}>{session.destination_label}</Text>
+          <Text style={styles.tripSub} numberOfLines={1}>{session.destination_label}</Text>
         ) : null}
 
-        <View style={{ marginVertical: spacing.xl }}>
-          <StatusRing
+        <View style={{ marginTop: spacing.lg }}>
+          <Cronometro
             state={session.state}
             lastSignalAt={session.last_signal_at}
             expectedCheckinAt={session.expected_checkin_at}
+            gracePeriod={session.grace_period}
+            alertDelay={session.alert_delay}
           />
         </View>
 
-        <CheckinButton onPress={checkIn} />
-
-        <View style={{ height: spacing.md }} />
-
-        <PanicButton onTrigger={onSos} />
-
-        {/* Prova visível de que o check-in passivo funciona. Sem este bloco,
+        {/* Prova visível de que o check-in passivo funciona. Sem estes números,
             o usuário não tem como saber que o sistema está vivo. */}
-        <View style={styles.signalCard}>
-          <Text style={styles.signalLabel}>ÚLTIMO SINAL DE VIDA</Text>
-          <Text style={styles.signalValue}>{SIGNAL_LABEL[session.last_signal_kind]}</Text>
-          <Text style={styles.signalTime}>{relativeTime(session.last_signal_at)}</Text>
+        <View style={{ marginTop: spacing.lg }}>
+          <Metricas
+            itens={[
+              { valor: SINAL_CURTO[session.last_signal_kind], rotulo: 'Último sinal' },
+              { valor: tempoRelativo(session.last_signal_at), rotulo: 'Quando' },
+              { valor: `${intervalo}h`, rotulo: 'Intervalo' },
+            ]}
+          />
+        </View>
 
-          {pending > 0 && (
-            <Text style={styles.queueWarn}>
-              {pending} {pending === 1 ? 'ponto guardado' : 'pontos guardados'} offline — enviaremos
-              quando houver conexão.
-            </Text>
-          )}
+        {pending > 0 && (
+          <Text style={styles.queueWarn}>
+            {pending} {pending === 1 ? 'ponto guardado' : 'pontos guardados'} offline — enviaremos
+            quando houver conexão.
+          </Text>
+        )}
+
+        <View style={{ marginTop: spacing.lg }}>
+          <Rota sessionId={session.id} />
+        </View>
+
+        <View style={{ marginTop: spacing.lg }}>
+          <Pilula
+            label={confirmado ? '✓  Registrado' : 'Estou bem'}
+            onPress={confirmar}
+            ocupado={confirmando}
+          />
+        </View>
+
+        {/* O SOS continua exigindo 3 segundos de pressão.
+            Ele parece um botão comum e não é: telefone no bolso, na mochila, na
+            mão de uma criança. Um SOS acidental aciona a família inteira e é o
+            tipo de erro que faz desinstalar o app. */}
+        <View style={{ marginTop: spacing.sm + 2 }}>
+          <Sobre>Em emergência</Sobre>
+          <View style={{ marginTop: 6 }}>
+            <PanicButton onTrigger={onSos} />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return 'agora mesmo';
-  if (min < 60) return `há ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `há ${h}h`;
-  return `há ${Math.floor(h / 24)} dias`;
-}
-
 const criarEstilos = (c: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  tripTitle: { ...typo.h2, color: c.text, textAlign: 'center' },
-  tripSub: { ...typo.small, color: c.textFaint, textAlign: 'center', marginTop: 2 },
+  content: { padding: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl },
+  tripTitle: { ...typo.h2, color: c.text },
+  tripSub: { ...typo.caption, color: c.textFaint, marginTop: 1 },
   muted: { ...typo.body, color: c.textMuted, textAlign: 'center', marginTop: 80 },
 
   empty: { flex: 1, justifyContent: 'center', padding: spacing.xl },
@@ -185,16 +242,5 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   },
   link: { ...typo.body, color: c.brandLight, textAlign: 'center', marginTop: spacing.lg, fontWeight: '600' },
 
-  signalCard: {
-    marginTop: spacing.xl,
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
-    padding: spacing.md,
-  },
-  signalLabel: { ...typo.caption, color: c.textFaint, letterSpacing: 1.2 },
-  signalValue: { ...typo.h2, color: c.text, marginTop: 4 },
-  signalTime: { ...typo.small, color: c.textMuted, marginTop: 2 },
-  queueWarn: { ...typo.caption, color: c.grace, marginTop: spacing.sm, lineHeight: 17 },
+  queueWarn: { ...typo.caption, color: c.grace, marginTop: spacing.md, lineHeight: 17 },
 });

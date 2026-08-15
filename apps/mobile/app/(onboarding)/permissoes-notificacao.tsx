@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { registerForPush } from '../../src/services/notifications';
+import { Icone } from '../../src/components/Icone';
 import { spacing, radius, type as typo, useColors } from '../../src/theme';
 
 /**
@@ -42,7 +43,9 @@ export default function PermissoesNotificacao() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
       <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingTop: spacing.xxl }}>
-        <Text style={{ fontSize: 48, textAlign: 'center' }}>🔔</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Icone nome="sino" cor={c.grace} tamanho={54} traco={1.3} />
+        </View>
 
         <Text
           style={{

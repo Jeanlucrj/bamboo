@@ -78,16 +78,24 @@ export function PanicButton({ onTrigger }: { onTrigger: () => void }) {
 const criarEstilos = (c: Palette) => StyleSheet.create({
   wrapper: { width: '100%' },
   button: {
-    height: 76,
-    borderRadius: radius.lg,
-    backgroundColor: '#3F1416',
-    borderWidth: 1.5,
-    borderColor: c.alert,
+    height: 68,
+    // Pílula, como os demais botões do desenho novo. O SOS é o único que
+    // continua preenchido de vermelho: em pânico ninguém lê rótulo, lê cor e
+    // posição, e um contorno vermelho sobre preto não tem a mesma urgência.
+    borderRadius: radius.pill,
+    backgroundColor: c.sos,
     overflow: 'hidden',
     justifyContent: 'center',
   },
-  fill: { ...StyleSheet.absoluteFillObject, right: undefined, backgroundColor: c.alert },
+  // O preenchimento do progresso corre em branco translúcido por cima do
+  // vermelho. Antes o botão era quase preto e o vermelho é que avançava — o
+  // que fazia o estado de repouso parecer desligado.
+  fill: {
+    ...StyleSheet.absoluteFillObject,
+    right: undefined,
+    backgroundColor: 'rgba(255,255,255,0.28)',
+  },
   content: { alignItems: 'center' },
-  title: { ...typo.h1, color: '#fff', letterSpacing: 4 },
-  subtitle: { ...typo.caption, color: '#FCA5A5', marginTop: 2 },
+  title: { ...typo.h2, color: '#fff', letterSpacing: 3, fontWeight: '800' },
+  subtitle: { ...typo.caption, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 1 },
 });

@@ -3,7 +3,8 @@ import { View, Text, Pressable, StyleSheet, Linking, Platform } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { requestTrackingPermissions } from '../../src/services/location/backgroundLocation';
-import { spacing, radius, type as typo, useStyles, type Palette } from '../../src/theme';
+import { Icone, type NomeIcone } from '../../src/components/Icone';
+import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 /**
  * Tela de PRIMING — precede o prompt nativo.
@@ -15,6 +16,7 @@ import { spacing, radius, type as typo, useStyles, type Palette } from '../../sr
  */
 export default function PermissoesLocalizacao() {
   const styles = useStyles(criarEstilos);
+  const c = useColors();
   const router = useRouter();
   const [denied, setDenied] = useState<null | 'foreground' | 'background'>(null);
 
@@ -46,22 +48,27 @@ export default function PermissoesLocalizacao() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
-        <Text style={styles.emoji}>📍</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Icone nome="pino" cor={c.brandLight} tamanho={54} traco={1.3} />
+        </View>
         <Text style={styles.title}>Sua localização fica invisível{'\n'}— até precisar aparecer</Text>
 
         <View style={styles.bullets}>
           <Bullet
-            icon="🔒"
+            icone="olho"
+            cor={c.brandLight}
             title="Ninguém vê onde você está"
             body="Nem sua família, nem a gente. A posição só é revelada se o alarme disparar."
           />
           <Bullet
-            icon="🔋"
+            icone="raio"
+            cor={c.safe}
             title="Menos de 2% de bateria por dia"
             body="Um ping discreto a cada poucas horas ou quando você muda de lugar de verdade."
           />
           <Bullet
-            icon="🆘"
+            icone="alerta"
+            cor={c.alert}
             title="É o que permite te encontrar"
             body="Sem localização em segundo plano, seus contatos recebem um alerta sem saber onde procurar."
           />
@@ -104,11 +111,15 @@ export default function PermissoesLocalizacao() {
   );
 }
 
-function Bullet({ icon, title, body }: { icon: string; title: string; body: string }) {
+function Bullet({
+  icone, cor, title, body,
+}: { icone: NomeIcone; cor: string; title: string; body: string }) {
   const styles = useStyles(criarEstilos);
   return (
     <View style={styles.bullet}>
-      <Text style={styles.bulletIcon}>{icon}</Text>
+      <View style={{ paddingTop: 2 }}>
+        <Icone nome={icone} cor={cor} tamanho={20} />
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.bulletTitle}>{title}</Text>
         <Text style={styles.bulletBody}>{body}</Text>

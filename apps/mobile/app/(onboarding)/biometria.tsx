@@ -9,6 +9,7 @@ import {
   pedirBiometria,
   type Disponibilidade,
 } from '../../src/services/bloqueio';
+import { Icone } from '../../src/components/Icone';
 import { spacing, radius, type as typo, useColors } from '../../src/theme';
 
 /**
@@ -87,7 +88,9 @@ export default function OfertaBiometria() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
       <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingTop: spacing.xxl }}>
-        <Text style={{ fontSize: 48, textAlign: 'center' }}>🔐</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Icone nome="digital" cor={c.safe} tamanho={54} traco={1.3} />
+        </View>
 
         <Text
           style={{

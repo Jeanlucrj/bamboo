@@ -6,6 +6,14 @@ export type Perfil = {
   home_country: string | null;
   current_country: string | null;
   avatar_url: string | null;
+  /**
+   * Vem de `auth.users`, não de `profiles`.
+   *
+   * A tabela de perfil não guarda e-mail — ele mora no schema de autenticação,
+   * e duplicá-lo criaria duas versões da mesma verdade. Como já chamamos
+   * `getUser()` aqui para descobrir o id, o e-mail sai de graça na mesma ida.
+   */
+  email: string | null;
 };
 
 type PerfilStore = {
@@ -43,7 +51,10 @@ export const usePerfilStore = create<PerfilStore>((set) => ({
       .eq('id', user.id)
       .maybeSingle();
 
-    set({ perfil: (data as Perfil) ?? null, carregando: false });
+    set({
+      perfil: data ? { ...(data as Omit<Perfil, 'email'>), email: user.email ?? null } : null,
+      carregando: false,
+    });
   },
 
   limpar: () => set({ perfil: null, carregando: false }),

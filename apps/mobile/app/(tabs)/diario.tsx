@@ -7,7 +7,9 @@ import { useRouter } from 'expo-router';
 import { bandeiraEmoji } from '@sentinela/shared';
 
 import { Identidade } from '../../src/components/Identidade';
-import { StatCard } from '../../src/components/StatCard';
+import { Icone } from '../../src/components/Icone';
+import { Sobre, Metricas, Nota } from '../../src/components/Pecas';
+import { GraficoBarras, Medalha, corDe } from '../../src/components/Grafico';
 import { useTravelStats, useCountryVisits, useTripHistory } from '../../src/hooks/useTravelStats';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
@@ -18,6 +20,11 @@ import { spacing, radius, type as typo, useStyles, useColors, type Palette } fro
  * todo dia. Este é o motor de retenção — e o único que gera compartilhamento
  * orgânico. Os números vêm de mv_user_travel_stats, calculada por PostGIS
  * sobre o histórico de GPS e atualizada de hora em hora pelo cron.
+ *
+ * No desenho novo os quilômetros viram o herói da tela. Antes eles dividiam
+ * espaço igualmente com "13 dias" dentro de seis cartões idênticos — e o
+ * número que a pessoa quer mostrar para os amigos ficava do mesmo tamanho da
+ * contagem de dias.
  */
 export default function DiarioScreen() {
   const c = useColors();
@@ -36,7 +43,7 @@ export default function DiarioScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={['top']}>
         <ActivityIndicator style={{ marginTop: 80 }} color={c.brandLight} />
       </SafeAreaView>
     );
@@ -61,6 +68,16 @@ export default function DiarioScreen() {
   };
 
   const hasData = s && s.days_tracked > 0;
+
+  // Quilômetros por viagem, da mais antiga para a mais nova. `get_my_trip_history`
+  // devolve a mais recente primeiro, e um gráfico que anda para trás no tempo
+  // faz a barra destacada — a viagem atual — aparecer à esquerda, onde o olho
+  // lê "começo".
+  const barras = [...trips]
+    .filter((t) => (t.km ?? 0) > 0)
+    .reverse()
+    .slice(-9)
+    .map((t) => ({ rotulo: mesCurto(t.starts_at), valor: t.km ?? 0 }));
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -98,15 +115,15 @@ export default function DiarioScreen() {
             para a lista das viagens em si. */}
         {trips.length > 0 ? (
           <Pressable style={styles.linhaViagens} onPress={() => router.push('/viagem/historico')}>
-            <Text style={styles.linhaGlifo}>🧳</Text>
+            <Icone nome="mala" cor={c.brandLight} tamanho={20} />
             <View style={{ flex: 1 }}>
               <Text style={styles.linhaTitulo}>Minhas viagens</Text>
               <Text style={styles.linhaSub}>
-                {trips.length === 1 ? '1 viagem' : `${trips.length} viagens`} · datas, km, países e
-                cidades de cada uma
+                datas, km, países e cidades de cada uma
               </Text>
             </View>
-            <Text style={styles.linhaSeta}>›</Text>
+            <Text style={styles.linhaValor}>{trips.length}</Text>
+            <Icone nome="seta" cor={c.textFaint} tamanho={16} />
           </Pressable>
         ) : null}
 
@@ -120,85 +137,117 @@ export default function DiarioScreen() {
           </View>
         ) : (
           <>
-            {/* Mapa-múndi: substituir por SVG de projeção equirretangular com
-                os países de stats.countries preenchidos. Nada de Mapbox aqui —
-                a tela precisa abrir instantaneamente e funcionar offline. */}
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.mapCount}>{s.countries_count}</Text>
-              <Text style={styles.mapLabel}>
-                {s.countries_count === 1 ? 'país visitado' : 'países visitados'}
+            {/* O HERÓI: o número que a pessoa manda print para os amigos. */}
+            <View style={{ marginTop: spacing.lg }}>
+              {stats?.first_ping_at ? <Sobre>Desde {fmtData(stats.first_ping_at)}</Sobre> : null}
+              <Text style={styles.heroi} adjustsFontSizeToFit numberOfLines={1}>
+                {formatKm(s.total_km)}
+                <Text style={styles.heroiUnidade}> km</Text>
               </Text>
-              <Text style={styles.mapFlags}>
-                {s.countries.slice(0, 12).map(bandeiraEmoji).join('  ')}
-                {s.countries.length > 12 ? `  +${s.countries.length - 12}` : ''}
+              <Text style={styles.heroiSub}>
+                {s.earth_laps >= 0.01
+                  ? `${s.earth_laps.toLocaleString('pt-BR')} ${s.earth_laps === 1 ? 'volta' : 'voltas'} ao mundo`
+                  : 'a caminho da primeira volta ao mundo'}
               </Text>
             </View>
 
-            <View style={styles.grid}>
-              <StatCard
-                value={formatKm(s.total_km)}
-                label="quilômetros percorridos"
-                hint={`${s.earth_laps} ${s.earth_laps === 1 ? 'volta' : 'voltas'} ao mundo`}
+            {/* As seis estatísticas continuam todas aqui — o que mudou é que
+                elas deixaram de ser seis cartões com borda do mesmo peso do
+                herói, e viraram uma grade alinhada onde o valor manda e o
+                rótulo serve. */}
+            <View style={{ marginTop: spacing.md }}>
+              <Metricas
+                itens={[
+                  { valor: s.countries_count, rotulo: 'Países' },
+                  { valor: s.cities_count, rotulo: 'Cidades' },
+                  { valor: s.days_tracked, rotulo: 'Dias na estrada' },
+                  { valor: `${s.world_percent}%`, rotulo: 'Do mundo' },
+                  { valor: s.passive_checkins, rotulo: 'Check-ins passivos', cor: c.safe },
+                  { valor: s.trips_completed, rotulo: 'Viagens concluídas' },
+                ]}
               />
-              <StatCard value={s.cities_count} label="cidades" accent="#A78BFA" />
+              <Nota>
+                &ldquo;Do mundo&rdquo; é sobre 195 países. Check-in passivo é deslocamento detectado
+                pelo GPS ou abertura do app — quanto maior essa conta, menos o Sentinela precisou da
+                sua atenção.
+              </Nota>
             </View>
 
-            <View style={styles.grid}>
-              <StatCard value={s.days_tracked} label="dias na estrada" accent="#F59E0B" />
-              <StatCard
-                value={`${s.world_percent}%`}
-                label="do mundo"
-                hint="de 195 países"
-                accent="#38BDF8"
-              />
-            </View>
-
-            <View style={styles.grid}>
-              <StatCard
-                value={s.passive_checkins}
-                label="check-ins passivos"
-                hint="sem você fazer nada"
-                accent={c.safe}
-              />
-              <StatCard value={s.trips_completed} label="viagens concluídas" />
-            </View>
-
-            <Text style={styles.sectionTitle}>Timeline</Text>
-            {loadingVisits ? (
-              <ActivityIndicator color={c.brandLight} />
-            ) : (
-              visits.slice(0, 30).map((v, i) => (
-                <View key={`${v.country_code}-${v.entered_at}-${i}`} style={styles.timelineRow}>
-                  <Text style={styles.timelineFlag}>{bandeiraEmoji(v.country_code)}</Text>
-                  <View style={{ flex: 1 }}>
-                    {/* A cidade no lugar da sigla. "BR" não é um lugar: não
-                        distingue três dias em São José dos Campos de três dias
-                        atravessando o país. */}
-                    <Text style={styles.timelineCountry}>
-                      {v.city ?? 'Em trânsito'}
-                    </Text>
-                    <Text style={styles.timelineDates}>{periodo(v.entered_at, v.left_at)}</Text>
-                    {/* O nome da viagem é o que responde "cadê a de hoje?".
-                        Sem ele, duas estadas na mesma cidade em viagens
-                        diferentes ficam visualmente idênticas. */}
-                    {v.trip_title ? (
-                      <Text style={styles.timelineTrip} numberOfLines={1}>
-                        {v.trip_title}
-                      </Text>
-                    ) : null}
-                  </View>
+            {barras.length > 1 ? (
+              <View style={{ marginTop: spacing.xl }}>
+                <Sobre>Quilômetros por viagem</Sobre>
+                <View style={{ marginTop: 8 }}>
+                  <GraficoBarras dados={barras} />
                 </View>
-              ))
-            )}
+              </View>
+            ) : null}
+
+            {/* O PASSAPORTE. Era uma fileira de bandeirinhas dentro de um cartão
+                cinza; virou grade de medalhas com cor estável por país. */}
+            {s.countries.length > 0 ? (
+              <View style={{ marginTop: spacing.xl }}>
+                <Sobre>Passaporte</Sobre>
+                <View style={styles.medalhas}>
+                  {s.countries.map((p) => (
+                    <View key={p} style={{ alignItems: 'center', gap: 4 }}>
+                      <Medalha pais={p} tamanho={62} />
+                      <Text style={styles.medalhaBandeira}>{bandeiraEmoji(p)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <View style={{ marginTop: spacing.xl }}>
+              <Sobre>Onde você esteve</Sobre>
+              {loadingVisits ? (
+                <ActivityIndicator color={c.brandLight} style={{ marginTop: spacing.md }} />
+              ) : (
+                <View style={{ marginTop: 4 }}>
+                  {visits.slice(0, 30).map((v, i) => (
+                    <View key={`${v.country_code}-${v.entered_at}-${i}`} style={styles.timelineRow}>
+                      {/* Faixa colorida por viagem, como o calendário de treinos
+                          da referência. Duas estadas na mesma cidade em viagens
+                          diferentes deixam de parecer a mesma coisa. */}
+                      <View
+                        style={[
+                          styles.faixa,
+                          { backgroundColor: corDe(v.trip_title ?? v.country_code) },
+                        ]}
+                      />
+                      <View style={{ flex: 1 }}>
+                        {/* A cidade no lugar da sigla. "BR" não é um lugar: não
+                            distingue três dias em São José dos Campos de três
+                            dias atravessando o país. */}
+                        <Text style={styles.timelineCidade}>{v.city ?? 'Em trânsito'}</Text>
+                        <Text style={styles.timelineDatas}>
+                          {bandeiraEmoji(v.country_code)} {periodo(v.entered_at, v.left_at)}
+                        </Text>
+                        {/* O nome da viagem é o que responde "cadê a de hoje?".
+                            Sem ele, duas estadas na mesma cidade em viagens
+                            diferentes ficam visualmente idênticas. */}
+                        {v.trip_title ? (
+                          <Text style={styles.timelineViagem} numberOfLines={1}>
+                            {v.trip_title}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
 
             {/* A nota de "atualizado em" subiu para o topo, com hora. Aqui no
                 pé ela chegava depois de a pessoa já ter desconfiado do número —
                 e sem hora, "atualizado 11/08" não distingue 5 minutos de 5
                 horas atrás. */}
-            <Text style={styles.footnote}>
-              Quilômetros contam só deslocamento real entre pontos: menos de 50 m é tremida de GPS
-              e não entra. Puxe a tela para baixo para atualizar.
-            </Text>
+            <View style={{ marginTop: spacing.xl }}>
+              <Nota>
+                Quilômetros contam só deslocamento real entre pontos: menos de 50 m é tremida de GPS
+                e não entra. Puxe a tela para baixo para atualizar.
+              </Nota>
+            </View>
           </>
         )}
       </ScrollView>
@@ -213,6 +262,17 @@ function formatKm(km: number): string {
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+function fmtData(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+}
+
+/** "AGO 11" — curto o bastante para caber na ponta de um gráfico. */
+function mesCurto(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')} ${d.getDate()}`;
 }
 
 /**
@@ -251,58 +311,39 @@ function fmtHora(iso: string): string {
 
 const criarEstilos = (c: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
+  content: { padding: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl },
   title: { ...typo.h1, color: c.text },
-  subtitle: { ...typo.small, color: c.textMuted, marginBottom: 2 },
-  calculado: { ...typo.caption, color: c.textFaint, marginBottom: spacing.md, lineHeight: 16 },
+  subtitle: { ...typo.caption, color: c.textMuted, marginTop: 2 },
+  calculado: { ...typo.caption, fontSize: 11, color: c.textFaint, marginTop: 3, lineHeight: 15 },
 
-  empty: { padding: spacing.xl, alignItems: 'center' },
-  emptyText: { ...typo.body, color: c.textFaint, textAlign: 'center', lineHeight: 24 },
+  empty: { paddingVertical: spacing.xl, paddingHorizontal: spacing.md },
+  emptyText: { ...typo.small, color: c.textMuted, textAlign: 'center', lineHeight: 22 },
 
   linhaViagens: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: c.border,
+    borderRadius: radius.bloco,
     padding: spacing.md,
-    marginBottom: spacing.sm,
+    marginTop: spacing.md,
   },
-  linhaGlifo: { fontSize: 26 },
-  linhaTitulo: { ...typo.body, color: c.text, fontWeight: '700' },
-  linhaSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 16 },
-  linhaSeta: { fontSize: 22, color: c.textFaint },
+  linhaTitulo: { ...typo.small, color: c.text, fontWeight: '700' },
+  linhaSub: { ...typo.caption, fontSize: 11, color: c.textMuted, marginTop: 1 },
+  linhaValor: { ...typo.small, color: c.textMuted, fontWeight: '700' },
 
-  mapPlaceholder: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: c.border,
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  mapCount: { fontSize: 56, fontWeight: '800', color: c.brandLight },
-  mapLabel: { ...typo.small, color: c.textMuted },
-  mapFlags: { fontSize: 22, marginTop: spacing.md, textAlign: 'center', lineHeight: 32 },
+  heroi: { ...typo.hero, color: c.text, marginTop: 4, fontVariant: ['tabular-nums'] },
+  heroiUnidade: { fontSize: 22, fontWeight: '700', color: c.textMuted, letterSpacing: 0 },
+  heroiSub: { ...typo.caption, color: c.textMuted, marginTop: 2 },
 
-  grid: { flexDirection: 'row', gap: spacing.sm },
+  medalhas: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+  medalhaBandeira: { fontSize: 13 },
 
-  sectionTitle: { ...typo.h2, color: c.text, marginTop: spacing.lg, marginBottom: spacing.sm },
-  timelineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  timelineFlag: { fontSize: 28 },
-  timelineCountry: { ...typo.body, color: c.text, fontWeight: '600' },
-  timelineDates: { ...typo.caption, color: c.textFaint },
-  timelineTrip: { ...typo.caption, color: c.brandLight, marginTop: 2, fontWeight: '600' },
-
-  footnote: { ...typo.caption, color: c.textFaint, marginTop: spacing.lg, textAlign: 'center' },
+  // Sem régua horizontal entre as linhas: a faixa colorida à esquerda já
+  // agrupa, e um divisor a cada item devolvia a cara de tabela.
+  timelineRow: { flexDirection: 'row', gap: spacing.sm + 2, paddingVertical: 9 },
+  faixa: { width: 4, borderRadius: radius.pill },
+  timelineCidade: { ...typo.small, color: c.text, fontWeight: '700' },
+  timelineDatas: { ...typo.caption, fontSize: 11, color: c.textFaint, marginTop: 1 },
+  timelineViagem: { ...typo.caption, fontSize: 11, color: c.brandLight, marginTop: 2, fontWeight: '700' },
 });

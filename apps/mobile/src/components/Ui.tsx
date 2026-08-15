@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ActivityIndicator, Platform } from 'react-native';
+import { Icone, type NomeIcone } from './Icone';
 import { useColors, useTheme } from '../theme';
 import { spacing, radius, type as typo } from '../theme';
 
@@ -31,10 +32,16 @@ export function Tela({ children }: { children: React.ReactNode }) {
 /**
  * Cartão.
  *
- * Três camadas fazem o bloco parecer objeto e não `<div>`: raio grande, uma
- * linha de luz no topo simulando a quina que pega iluminação, e sombra
- * projetada no fundo. Sem a linha de luz o cartão fica chapado; sem a sombra,
- * ele parece recortado no fundo em vez de pousado sobre ele.
+ * SEM BORDA E SEM SOMBRA, e antes tinha as duas mais uma linha de luz no topo.
+ *
+ * Aquelas três camadas existiam para fazer o bloco parecer objeto sobre um
+ * fundo azul-noite que era quase da mesma luminosidade. Sobre preto puro elas
+ * viraram ruído: a superfície cinza já se separa sozinha, e o contorno de 1px
+ * em volta de cada cartão desenhava uma grade de caixas que é exatamente a
+ * aparência de formulário que o desenho novo tira.
+ *
+ * A sombra continua disponível só no tema claro, onde superfície branca sobre
+ * fundo branco realmente precisa de ajuda para se destacar.
  */
 export function Cartao({
   children, padding = 0, destaque,
@@ -50,35 +57,29 @@ export function Cartao({
     <View
       style={{
         backgroundColor: c.surface,
-        borderRadius: radius.card,
-        borderWidth: 1,
-        borderColor: destaque ?? c.border,
+        borderRadius: radius.bloco,
+        // A borda só aparece quando alguém pede destaque explicitamente.
+        borderWidth: destaque ? 1 : 0,
+        borderColor: destaque,
         padding,
         overflow: 'hidden',
-        ...sombra(claro),
+        ...(claro ? sombra() : {}),
       }}
     >
-      <View
-        style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-          backgroundColor: c.highlight,
-        }}
-        pointerEvents="none"
-      />
       {children}
     </View>
   );
 }
 
-function sombra(claro: boolean) {
+function sombra() {
   return Platform.select({
     ios: {
       shadowColor: '#000',
-      shadowOpacity: claro ? 0.06 : 0.4,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.06,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 4 },
     },
-    android: { elevation: claro ? 2 : 6 },
+    android: { elevation: 2 },
     default: {},
   });
 }
@@ -149,21 +150,33 @@ export function Titulo({ children }: { children: React.ReactNode }) {
   return <Text style={{ ...typo.h2, color: c.text }}>{children}</Text>;
 }
 
+/**
+ * Botão.
+ *
+ * PÍLULA, e o primário agora é branco no escuro (preto no claro) em vez de
+ * teal. É o contraste máximo contra o fundo — o mesmo recurso do "Pausar" e do
+ * "Continuar" da referência —, e sobrevive à tela lida sob sol direto, que é
+ * onde um teal médio primeiro desaparece.
+ *
+ * O teal não sumiu do app: ele continua sendo a cor da marca, do traço da rota
+ * no mapa e dos links. Só deixou de ser a cor de "aperte aqui", papel que ele
+ * dividia com o significado de marca e desempenhava mal nos dois.
+ */
 export function Botao({
-  label, onPress, tom = 'primario', ocupado, desabilitado, glifo,
+  label, onPress, tom = 'primario', ocupado, desabilitado, glifo, icone,
 }: {
   label: string;
   onPress: () => void;
   tom?: 'primario' | 'perigo' | 'neutro';
   ocupado?: boolean;
   desabilitado?: boolean;
+  /** @deprecated Use `icone`. */
   glifo?: string;
+  icone?: NomeIcone;
 }) {
-  const { c, claro } = useUi();
-  const fundo = tom === 'primario' ? c.brandLight : tom === 'perigo' ? c.alert : c.surface;
-  // Tinta escura sobre o teal claro do modo escuro (contraste alto, cara de
-  // botão "aceso"); branca sobre o teal escurecido do modo claro.
-  const cor = tom === 'neutro' ? c.text : claro ? '#fff' : '#05201D';
+  const { c } = useUi();
+  const fundo = tom === 'primario' ? c.text : tom === 'perigo' ? c.sos : c.surface;
+  const cor = tom === 'primario' ? c.bg : tom === 'perigo' ? '#FFFFFF' : c.text;
 
   return (
     <Pressable
@@ -171,10 +184,8 @@ export function Botao({
       disabled={ocupado || desabilitado}
       style={({ pressed }) => ({
         height: 56,
-        borderRadius: radius.lg,
+        borderRadius: radius.pill,
         backgroundColor: fundo,
-        borderWidth: tom === 'neutro' ? 1 : 0,
-        borderColor: c.border,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -185,13 +196,12 @@ export function Botao({
       })}
     >
       {ocupado ? (
-        <ActivityIndicator color={tom === 'neutro' ? c.text : cor} />
+        <ActivityIndicator color={cor} />
       ) : (
         <>
-          {glifo ? <Text style={{ fontSize: 17 }}>{glifo}</Text> : null}
-          <Text style={{ ...typo.body, color: tom === 'perigo' ? '#fff' : cor, fontWeight: '800' }}>
-            {label}
-          </Text>
+          {icone ? <Icone nome={icone} cor={cor} tamanho={18} /> : null}
+          {!icone && glifo ? <Text style={{ fontSize: 17 }}>{glifo}</Text> : null}
+          <Text style={{ ...typo.body, color: cor, fontWeight: '800' }}>{label}</Text>
         </>
       )}
     </Pressable>
@@ -199,14 +209,16 @@ export function Botao({
 }
 
 export function Linha({
-  label, valor, onPress, destrutivo, ultima, glifo, cor, descricao, marcado,
+  label, valor, onPress, destrutivo, ultima, glifo, icone, cor, descricao, marcado,
 }: {
   label: string;
   valor?: string;
   onPress?: () => void;
   destrutivo?: boolean;
   ultima?: boolean;
+  /** @deprecated Use `icone`. Emoji não aceita cor e muda de desenho por aparelho. */
   glifo?: string;
+  icone?: NomeIcone;
   cor?: string;
   descricao?: string;
   /**
@@ -232,15 +244,22 @@ export function Linha({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-        paddingVertical: glifo ? 12 : spacing.md,
+        gap: icone ? spacing.sm + 3 : spacing.md,
+        paddingVertical: glifo || icone ? 13 : spacing.md,
         paddingHorizontal: spacing.md,
         borderBottomWidth: ultima ? 0 : 1,
         borderBottomColor: c.border,
         backgroundColor: pressed || marcado ? c.surfaceAlt : 'transparent',
       }}
     >
-      {glifo ? <Ladrilho glifo={glifo} cor={destrutivo ? c.alert : cor} tamanho={40} /> : null}
+      {/* Ícone de traço sem ladrilho: o quadrado tingido atrás só existia
+          porque emoji ignora `tintColor` e a cor precisava vir de algum lugar.
+          Com o traço colorido, o ladrilho vira moldura sem função. */}
+      {icone ? (
+        <Icone nome={icone} cor={destrutivo ? c.alert : cor ?? c.brandLight} tamanho={19} />
+      ) : glifo ? (
+        <Ladrilho glifo={glifo} cor={destrutivo ? c.alert : cor} tamanho={40} />
+      ) : null}
 
       <View style={{ flex: 1 }}>
         <Text
@@ -313,21 +332,21 @@ export function Aviso({ tom, titulo, children }: {
 }) {
   const { c, claro } = useUi();
   const cor = tom === 'perigo' ? c.alert : tom === 'atencao' ? c.grace : c.brandLight;
-  const glifo = tom === 'perigo' ? '⚠️' : tom === 'atencao' ? '💡' : 'ℹ️';
+  const icone: NomeIcone = tom === 'perigo' ? 'alerta' : tom === 'atencao' ? 'dica' : 'info';
 
   return (
     <View
       style={{
-        backgroundColor: tingir(cor, claro ? 0.08 : 0.1),
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: tingir(cor, 0.3),
+        // Fundo tingido sem contorno: a cor do fundo já diz o tom, e a borda
+        // fazia o aviso parecer um campo de formulário desabilitado.
+        backgroundColor: tingir(cor, claro ? 0.09 : 0.12),
+        borderRadius: radius.bloco,
         padding: spacing.md,
         flexDirection: 'row',
-        gap: spacing.sm,
+        gap: spacing.sm + 2,
       }}
     >
-      <Text style={{ fontSize: 16 }}>{glifo}</Text>
+      <Icone nome={icone} cor={cor} tamanho={18} />
       <View style={{ flex: 1 }}>
         <Text style={{ ...typo.small, color: c.text, fontWeight: '700' }}>{titulo}</Text>
         <Text style={{ ...typo.caption, color: c.textMuted, marginTop: 3, lineHeight: 18 }}>

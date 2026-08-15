@@ -3,8 +3,10 @@ import { ScrollView, View, Text, Pressable, ActivityIndicator, RefreshControl } 
 import { bandeiraEmoji, type TripHistoryItem } from '@sentinela/shared';
 
 import { useTripHistory } from '../../src/hooks/useTravelStats';
+import { Icone } from '../../src/components/Icone';
+import { Medalha } from '../../src/components/Grafico';
 import { spacing, radius, type as typo, useColors } from '../../src/theme';
-import { Tela, Cartao, Rotulo, Vazio, Aviso, Ladrilho } from '../../src/components/Ui';
+import { Tela, Cartao, Rotulo, Vazio, Aviso } from '../../src/components/Ui';
 
 /**
  * Histórico de viagens.
@@ -121,11 +123,17 @@ function CartaoViagem({ viagem }: { viagem: TripHistoryItem }) {
     <Cartao destaque={emAndamento ? c.brandLight : undefined}>
       <Pressable onPress={() => setAberto((v) => !v)} style={{ padding: spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <Ladrilho
-            glifo={paises.length ? bandeiraEmoji(paises[0]) : '🧭'}
-            cor={emAndamento ? c.safe : c.brandLight}
-            tamanho={44}
-          />
+          {/* Medalha do país no lugar do ladrilho com bandeira: cor estável por
+              país, sigla legível, e do mesmo tamanho para todos. Viagem sem
+              país registrado — rastreamento desligado — cai na bússola, que é
+              ícone de traço e não emoji. */}
+          {paises.length ? (
+            <Medalha pais={paises[0]} tamanho={44} />
+          ) : (
+            <View style={{ width: 44, alignItems: 'center' }}>
+              <Icone nome="bussola" cor={emAndamento ? c.safe : c.textFaint} tamanho={24} />
+            </View>
+          )}
 
           <View style={{ flex: 1 }}>
             <Text style={{ ...typo.body, color: c.text, fontWeight: '700' }} numberOfLines={1}>
