@@ -178,8 +178,7 @@ export default function MeusDados() {
           style={{
             maxHeight: 260,
             marginTop: spacing.sm,
-            borderWidth: 1,
-            borderColor: c.border,
+
             borderRadius: radius.md,
             overflow: 'hidden',
           }}

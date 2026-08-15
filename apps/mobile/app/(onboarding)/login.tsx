@@ -102,8 +102,7 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     height: 56,
     backgroundColor: c.surface,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
+
     paddingHorizontal: spacing.md,
     color: c.text,
     fontSize: 16,

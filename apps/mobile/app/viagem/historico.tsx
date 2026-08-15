@@ -206,8 +206,7 @@ function Selo({ texto }: { texto: string }) {
         paddingVertical: 5,
         borderRadius: radius.sm,
         backgroundColor: c.surfaceAlt,
-        borderWidth: 1,
-        borderColor: c.border,
+
       }}
     >
       <Text style={{ ...typo.caption, color: c.textMuted, fontWeight: '600' }}>{texto}</Text>

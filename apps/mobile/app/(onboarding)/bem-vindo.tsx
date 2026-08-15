@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Marca } from '../../src/components/Marca';
 import { spacing, radius, type as typo, useStyles, type Palette } from '../../src/theme';
 
 export default function BemVindo() {
@@ -14,7 +15,13 @@ export default function BemVindo() {
           empurrava o botão "Começar" para fora — o usuário via a explicação e
           nenhuma forma de seguir adiante. */}
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.logo}>SENTINELA</Text>
+        {/* O anel, e não só a palavra. Esta é a primeira tela de quem instala:
+            é onde a marca precisa aparecer, e era justamente uma das que não
+            mostravam o logo em lugar nenhum. */}
+        <View style={{ alignItems: 'center', gap: 10 }}>
+          <Marca tamanho={34} />
+          <Text style={styles.logo}>SENTINELA</Text>
+        </View>
 
         <Text style={styles.headline}>
           Se algo acontecer com você lá fora,{'\n'}alguém vai saber.
@@ -60,9 +67,12 @@ function Step({ n, title, body }: { n: string; title: string; body: string }) {
 const criarEstilos = (c: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.lg },
-  logo: { ...typo.caption, color: c.brandLight, letterSpacing: 4, textAlign: 'center' },
+  logo: { ...typo.eyebrow, color: c.textFaint, letterSpacing: 4, textAlign: 'center' },
+  // Manchete grande e apertada, como as telas de marketing da referência: o
+  // argumento inteiro do produto cabe em duas linhas e é a única coisa que
+  // precisa ser lida aqui.
   headline: {
-    ...typo.h1, fontSize: 30, color: c.text, textAlign: 'center',
+    ...typo.display, color: c.text, textAlign: 'center',
     marginTop: spacing.xl, lineHeight: 40,
   },
   sub: { ...typo.h2, color: c.brandLight, textAlign: 'center', marginTop: spacing.xs },

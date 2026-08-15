@@ -239,8 +239,7 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     height: 52,
     backgroundColor: c.surface,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
+
     paddingHorizontal: spacing.md,
     color: c.text,
     fontSize: 16,
@@ -248,9 +247,11 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   hint: { ...typo.caption, color: c.textFaint, marginTop: spacing.xs, lineHeight: 16 },
   error: { ...typo.caption, color: c.alert, marginTop: spacing.xs },
 
+  // Mesmo rótulo minúsculo em caixa alta do resto do app (o `Sobre`), para o
+  // formulário não ter uma escala tipográfica só dele.
   sectionLabel: {
-    ...typo.caption, color: c.textFaint, letterSpacing: 1.2,
-    marginTop: spacing.md, marginBottom: spacing.sm,
+    ...typo.eyebrow, color: c.textFaint,
+    marginTop: spacing.lg, marginBottom: spacing.sm,
   },
 
   segmented: {
@@ -272,8 +273,7 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
     width: 52, height: 52,
     borderRadius: radius.md,
     backgroundColor: c.surface,
-    borderWidth: 1,
-    borderColor: c.border,
+
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,8 +296,8 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   primary: {
     height: 56,
     marginTop: spacing.xl,
-    borderRadius: radius.md,
-    backgroundColor: c.brand,
+    borderRadius: radius.pill,
+    backgroundColor: c.text,
     alignItems: 'center',
     justifyContent: 'center',
   },

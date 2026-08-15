@@ -8,15 +8,32 @@ import { CHECKIN_PRESETS, travelSessionInput, VIAGENS_GRATIS } from '@sentinela/
 import { supabase } from '../../src/services/supabase';
 import { useSessionStore } from '../../src/stores/session';
 import { startBackgroundTracking } from '../../src/services/location/backgroundLocation';
+import { Sobre, Bloco, Degrau, Segmentado } from '../../src/components/Pecas';
+import { useResumoProtecao, listarContatos } from '../../src/hooks/useResumoProtecao';
+import { totalAteContatos } from '../../src/utils/tempo';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
 
 const DEFAULT_HOURS = 24;
+
+/**
+ * Degraus do escalonamento, em horas.
+ *
+ * A viagem ainda não existe, então não há `grace_period` nem `alert_delay` para
+ * ler — estes são os DEFAULTS da tabela (`20260101000100_core_schema.sql`,
+ * `default '2 hours'` e `default '6 hours'`). Nomeados aqui em vez de escritos
+ * no meio do texto porque a tela promete ao usuário exatamente quando a família
+ * dele será acionada: se o default mudar no banco e este número ficar para
+ * trás, a promessa vira mentira e ninguém percebe.
+ */
+const GRACA_H = 2;
+const ALERTA_H = 6;
 
 export default function NovaViagem() {
   const c = useColors();
   const styles = useStyles(criarEstilos);
   const router = useRouter();
   const { session: active, load } = useSessionStore();
+  const { resumo } = useResumoProtecao();
 
   const [title, setTitle] = useState('');
   const [destination, setDestination] = useState('');
@@ -182,37 +199,55 @@ export default function NovaViagem() {
         />
       </Field>
 
-      <Text style={styles.sectionLabel}>SE EU FICAR SEM DAR SINAL POR</Text>
-      <View style={styles.presets}>
-        {CHECKIN_PRESETS.map((p) => {
-          const isActive = p.hours === hours;
-          return (
-            <Pressable
-              key={p.hours}
-              onPress={() => setHours(p.hours)}
-              style={[styles.preset, isActive && styles.presetActive]}
-            >
-              <Text style={[styles.presetLabel, isActive && styles.presetLabelActive]}>
-                {p.label}
-              </Text>
-              <Text style={styles.presetHint}>{p.hint}</Text>
-            </Pressable>
-          );
-        })}
+      {/* Mesmo seletor da aba Viagem, e não mais cinco cartões empilhados.
+          As duas telas configuram exatamente a mesma coisa e mostravam dois
+          controles diferentes — quem criava a viagem aqui e ia ajustar lá
+          precisava reaprender. A dica de cada preset continua, abaixo,
+          referente ao selecionado. */}
+      <Sobre>Se eu ficar sem dar sinal por</Sobre>
+      <View style={{ marginTop: 8 }}>
+        <Segmentado
+          opcoes={CHECKIN_PRESETS.map((p) => ({ valor: p.hours, label: `${p.hours}h` }))}
+          valor={hours}
+          onChange={setHours}
+        />
       </View>
+      <Text style={styles.dica}>
+        {CHECKIN_PRESETS.find((p) => p.hours === hours)?.hint ?? ''}
+      </Text>
       {errors.checkin_hours ? <Text style={styles.error}>{errors.checkin_hours}</Text> : null}
 
-      <View style={styles.summary}>
-        <Text style={styles.summaryText}>
-          Se você ficar <Text style={styles.bold}>{hours}h</Text> sem dar sinal de vida, avisamos{' '}
-          <Text style={styles.bold}>só você</Text>. Passadas mais{' '}
-          <Text style={styles.bold}>2h</Text> sem resposta, insistimos por push e SMS. Se ainda
-          assim nada acontecer em <Text style={styles.bold}>6h</Text>, seus contatos de emergência
-          recebem o Dossiê.
-        </Text>
+      {/* A escada, no lugar do parágrafo de três frases. */}
+      <Sobre>O que acontece, e quando</Sobre>
+      <View style={{ marginTop: 4 }}>
+        <Degrau
+          cor={c.safe}
+          quando={`Em ${hours}h`}
+          titulo="Avisamos só você"
+          descricao="Push no seu celular, mais ninguém"
+        />
+        <Degrau
+          cor={c.grace}
+          quando={`Mais ${GRACA_H}h`}
+          titulo="Insistimos por push e SMS"
+          descricao="Ainda só para você"
+        />
+        <Degrau
+          cor={c.alert}
+          quando={`Mais ${ALERTA_H}h`}
+          titulo="Seus contatos recebem o Dossiê"
+          descricao={`${listarContatos(resumo.contatos)} · com sua última posição`}
+        />
       </View>
 
-      <Text style={styles.sectionLabel}>FONTES DE SINAL DE VIDA</Text>
+      <View style={{ marginTop: spacing.sm, marginBottom: spacing.md }}>
+        <Bloco>
+          <Sobre>Sua família só é acionada depois de</Sobre>
+          <Text style={styles.total}>{totalAteContatos(hours + GRACA_H + ALERTA_H)}</Text>
+        </Bloco>
+      </View>
+
+      <Sobre>Fontes de sinal de vida</Sobre>
 
       <Row
         title="GPS em segundo plano"
@@ -279,8 +314,8 @@ function Row({
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: c.brand, false: c.surfaceAlt }}
-        thumbColor="#fff"
+        trackColor={{ true: c.safe, false: c.surfaceAlt }}
+        thumbColor={c.bg}
       />
     </View>
   );
@@ -290,56 +325,26 @@ const criarEstilos = (c: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
-  fieldLabel: { ...typo.caption, color: c.textMuted, marginBottom: spacing.xs, letterSpacing: 0.6 },
+  fieldLabel: { ...typo.eyebrow, color: c.textFaint, marginBottom: 6 },
+  // Campo sem contorno: a superfície mais clara já diz onde se escreve, e uma
+  // borda em volta de cada campo era metade do peso visual do formulário.
   input: {
     height: 52,
     backgroundColor: c.surface,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
     paddingHorizontal: spacing.md,
     color: c.text,
     fontSize: 16,
   },
   error: { ...typo.caption, color: c.alert, marginTop: spacing.xs },
 
-  sectionLabel: {
-    ...typo.caption, color: c.textFaint, letterSpacing: 1.2,
-    marginTop: spacing.md, marginBottom: spacing.sm,
-  },
-  presets: { gap: spacing.sm },
-  preset: {
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: c.border,
-    padding: spacing.md,
-  },
-  presetActive: { borderColor: c.brandLight, backgroundColor: c.surfaceAlt },
-  presetLabel: { ...typo.h2, color: c.textMuted },
-  presetLabelActive: { color: c.text },
-  presetHint: { ...typo.caption, color: c.textFaint, marginTop: 2 },
+  dica: { ...typo.caption, color: c.textMuted, marginTop: 8, marginBottom: spacing.lg },
+  total: { ...typo.h1, color: c.text, marginTop: 2 },
 
-  summary: {
-    marginTop: spacing.lg,
-    backgroundColor: c.surfaceAlt,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: c.brandLight,
-  },
-  summaryText: { ...typo.small, color: c.text, lineHeight: 22 },
-  bold: { fontWeight: '700', color: c.brandLight },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  rowTitle: { ...typo.body, color: c.text, fontWeight: '600' },
-  rowSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 17 },
+  // Sem régua entre as linhas: o espaçamento já separa.
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
+  rowTitle: { ...typo.small, color: c.text, fontWeight: '700' },
+  rowSub: { ...typo.caption, color: c.textMuted, marginTop: 2, lineHeight: 16 },
 
   // Âmbar TINGIDO, e não o marrom #3A2A0C cravado.
   //
