@@ -263,6 +263,29 @@ export default function PerfilScreen() {
             {versao.embutido ? ' (do instalador)' : ' (atualizado pelo ar)'} · canal {versao.canal}
           </Nota>
         </View>
+
+        {/* Assinatura da empresa, no padrão discreto que a Meta usa no pé dos
+            ajustes: centralizada, pequena, em tinta apagada, sem link.
+
+            Sem link de propósito — um link no rodapé cria a expectativa de um
+            site pronto do outro lado, e rodapé com link quebrado desgasta mais
+            confiança do que rodapé sem link nenhum.
+
+            Separada do bloco de notas acima por um respiro maior: ela não é
+            mais uma ressalva legal, é a marca de quem fez. Coladas, as três
+            linhas viram um parágrafo de letra miúda e nenhuma se lê. */}
+        <Text
+          style={{
+            ...typo.caption,
+            fontSize: 11,
+            color: c.textFaint,
+            textAlign: 'center',
+            marginTop: spacing.xl,
+            opacity: 0.8,
+          }}
+        >
+          Red Sun Tecnologia
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
