@@ -25,7 +25,10 @@ import { flushQueue } from '../src/services/location/pingQueue';
 import { registerForPush } from '../src/services/notifications';
 import { registerDevice, getDeviceId } from '../src/services/device';
 import { handleAuthLink } from '../src/services/authLink';
-import { aplicarAtualizacaoNaAbertura } from '../src/services/atualizacao';
+import {
+  aplicarAtualizacaoNaAbertura,
+  useAplicarAtualizacaoBaixada,
+} from '../src/services/atualizacao';
 import { Abertura } from '../src/components/Abertura';
 import { TelaBloqueio } from '../src/components/TelaBloqueio';
 import {
@@ -71,6 +74,20 @@ function RootNavigator() {
   useEffect(() => {
     aplicarAtualizacaoNaAbertura();
   }, []);
+
+  /**
+   * O outro caminho da atualização, e o que faltava.
+   *
+   * `aplicarAtualizacaoNaAbertura` cobre o caso de o pacote ainda NÃO ter sido
+   * baixado. Só que, com `checkAutomatically: ON_LOAD`, quase sempre ele já
+   * foi — a camada nativa baixa antes de o JS existir. Nesse caso a checagem
+   * acima responde "nada novo" e o pacote fica engatilhado para a partida
+   * seguinte, que é justamente o comportamento que queríamos eliminar.
+   *
+   * Só enquanto a tela de abertura está no ar: depois disso o app está em uso,
+   * e reiniciar o runtime sem aviso é inaceitável num produto de emergência.
+   */
+  useAplicarAtualizacaoBaixada(aberturaVisivel);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
