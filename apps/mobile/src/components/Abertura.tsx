@@ -5,6 +5,7 @@ import { View, Text, Animated, Easing, Image, StyleSheet } from 'react-native';
 // é sempre escura porque seu fundo é compilado no instalador. Segui-la ao tema
 // claro faria a abertura piscar branco por cima de um fundo preto do sistema.
 import { DARK } from '../theme/palettes';
+import { Marca } from './Marca';
 
 /**
  * Tela de abertura animada.
@@ -119,7 +120,7 @@ export function Abertura({ pronto, onFim }: { pronto: boolean; onFim: () => void
         </Animated.View>
 
         <Animated.View style={{ transform: [{ scale: escalaLogo }], opacity: entrada }}>
-          <Image source={require('../../assets/splash-icon.png')} style={styles.logo} />
+          <Marca tamanho={TAM_LOGO} />
         </Animated.View>
       </View>
 

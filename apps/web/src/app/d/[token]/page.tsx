@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createAnonClient } from '@/lib/supabase/server';
 import type { DossierPayload, SafetyState } from '@sentinela/shared';
 import { ResolveButton } from '@/components/dossier/ResolveButton';
+import { LogoCompleta } from '@/components/ui/Logo';
 import { STATUS_TOKENS } from '@/lib/statusTokens';
 
 /**
@@ -52,7 +53,14 @@ export default async function DossierPage({
           pessoas foram treinadas a não clicar. */}
       <div className="border-b border-slate-800/60 bg-[#070b14]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3.5">
-          <span className="gradient-text text-sm font-extrabold tracking-[0.2em]">SENTINELA</span>
+          {/* O ANEL, e não só a palavra.
+              Esta era a única tela do produto inteiro — web e app — que ainda
+              escrevia SENTINELA em texto puro. E é a que mais depende de ser
+              reconhecida: chega por link de WhatsApp para alguém que muitas
+              vezes nunca ouviu falar do Sentinela, pedindo para abrir o dado
+              médico de um parente. O componente `Logo` nasceu depois desta
+              página e nunca foi trazido para cá. */}
+          <LogoCompleta size={22} texto="text-sm" />
           <span className="text-[11px] font-medium text-slate-500">Dossiê de Emergência</span>
         </div>
       </div>
@@ -228,7 +236,7 @@ export default async function DossierPage({
         {/* Rodapé com a marca: fecha a página com a mesma assinatura do topo e
             diz de onde veio o e-mail/WhatsApp que trouxe a pessoa até aqui. */}
         <footer className="border-t border-slate-800/60 pt-5 text-center">
-          <span className="gradient-text text-xs font-extrabold tracking-[0.2em]">SENTINELA</span>
+          <LogoCompleta size={18} texto="text-xs" />
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-600">
             Você recebeu este link porque {d.traveler.name} cadastrou você como contato de
             emergência.

@@ -3,6 +3,7 @@ import { View, Text, Image, Animated, Easing, Pressable, StyleSheet } from 'reac
 import { pedirBiometria } from '../services/bloqueio';
 import { useBloqueioStore } from '../stores/bloqueio';
 import { DARK } from '../theme/palettes';
+import { Marca } from './Marca';
 
 /**
  * Tela de desbloqueio.
@@ -62,7 +63,7 @@ export function TelaBloqueio({ onDesbloquear, onSair }: {
         <Animated.View
           style={[styles.halo, { transform: [{ scale: escala }], opacity: opacidade }]}
         />
-        <Image source={require('../../assets/splash-icon.png')} style={styles.logo} />
+        <Marca tamanho={TAM} />
       </View>
 
       <Text style={styles.titulo}>

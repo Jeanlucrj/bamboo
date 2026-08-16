@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!--
+    Favicon do Sentinela.
+
+    A web nao tinha favicon nenhum: nem .ico, nem icon.png, nem apple-icon. A
+    aba do navegador mostrava o globo cinza padrao do Next em todas as paginas,
+    inclusive na do dossie — que e a que fica aberta numa aba enquanto alguem
+    liga para a policia de outro pais.
+
+    `app/icon.svg` e a convencao do App Router: o Next descobre o arquivo pelo
+    nome, gera a tag <link rel="icon"> e serve com o content-type certo. Nao
+    precisa de configuracao nem de entrada no metadata.
+
+    Vetor e nao PNG pelo mesmo motivo do componente Logo: o desenho e um anel
+    de tracado, que em 16px vira mingau quando rasterizado com antialias de
+    fonte. Em SVG o navegador rasteriza no tamanho final.
+
+    Sem fundo de proposito. O favicon aparece sobre a barra do navegador, que e
+    clara ou escura conforme o tema do sistema — um quadrado preto por tras do
+    anel ficaria como um selo no tema claro. O anel sozinho funciona nos dois.
+
+    Geometria identica a de apps/web/src/components/ui/Logo.tsx e de
+    apps/mobile/src/components/Marca.tsx: r=34, traco 15, degrade vertical
+    #10B981 -> #14B8A6 -> #22D3EE. Se um mudar, os tres mudam.
+  -->
+  <defs>
+    <linearGradient id="anel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="55%" stop-color="#14B8A6" />
+      <stop offset="100%" stop-color="#22D3EE" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="34" fill="none" stroke="url(#anel)" stroke-width="15" />
+</svg>
