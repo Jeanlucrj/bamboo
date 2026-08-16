@@ -8,7 +8,7 @@ import { bandeiraEmoji } from '@sentinela/shared';
 
 import { Identidade } from '../../src/components/Identidade';
 import { Icone } from '../../src/components/Icone';
-import { Sobre, Metricas, Nota } from '../../src/components/Pecas';
+import { Sobre, Metricas, Nota, Assinatura } from '../../src/components/Pecas';
 import { GraficoBarras, Medalha, corDe } from '../../src/components/Grafico';
 import { useTravelStats, useCountryVisits, useTripHistory } from '../../src/hooks/useTravelStats';
 import { spacing, radius, type as typo, useStyles, useColors, type Palette } from '../../src/theme';
@@ -250,6 +250,8 @@ export default function DiarioScreen() {
             </View>
           </>
         )}
+
+        <Assinatura />
       </ScrollView>
     </SafeAreaView>
   );

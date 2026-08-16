@@ -8,7 +8,7 @@ import type { SignalKind } from '@sentinela/shared';
 import { Identidade } from '../../src/components/Identidade';
 import { Cronometro } from '../../src/components/Cronometro';
 import { Rota } from '../../src/components/Rota';
-import { Metricas, Sobre, Pilula } from '../../src/components/Pecas';
+import { Metricas, Sobre, Pilula, Assinatura } from '../../src/components/Pecas';
 import { PanicButton } from '../../src/components/PanicButton';
 import { useSessionStore } from '../../src/stores/session';
 import { queueSize, flushQueue } from '../../src/services/location/pingQueue';
@@ -222,6 +222,8 @@ export default function HomeScreen() {
             <PanicButton onTrigger={onSos} />
           </View>
         </View>
+
+        <Assinatura />
       </ScrollView>
     </SafeAreaView>
   );

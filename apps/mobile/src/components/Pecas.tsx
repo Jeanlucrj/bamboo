@@ -339,6 +339,35 @@ export function LinhaAjuste({
   );
 }
 
+/**
+ * Assinatura de quem fez, no pé de cada aba.
+ *
+ * Aparece ao rolar até o fim, como o rodapé de um site — não ocupa espaço fixo
+ * na tela nem compete com o conteúdo. Centralizada, minúscula e apagada: a
+ * marca do produto é o Sentinela, e esta linha diz de quem ele é, não o que a
+ * pessoa deve olhar.
+ *
+ * Sem link: um link no rodapé promete um site pronto do outro lado, e link
+ * quebrado desgasta mais confiança do que assinatura sem link.
+ */
+export function Assinatura() {
+  const c = useColors();
+  return (
+    <Text
+      style={{
+        ...typo.caption,
+        fontSize: 11,
+        color: c.textFaint,
+        textAlign: 'center',
+        marginTop: spacing.xl,
+        opacity: 0.7,
+      }}
+    >
+      Red Sun Tecnologia
+    </Text>
+  );
+}
+
 /** Texto de rodapé. Pequeno, mas nunca ausente — é onde moram as ressalvas. */
 export function Nota({ children }: { children: React.ReactNode }) {
   const c = useColors();

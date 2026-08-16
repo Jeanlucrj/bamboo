@@ -10,7 +10,9 @@ import { revokeThisDevice } from '../../src/services/device';
 import { MarcaCompleta } from '../../src/components/Marca';
 import { AvatarGrande } from '../../src/components/Identidade';
 import { Icone, type NomeIcone } from '../../src/components/Icone';
-import { Sobre, Bloco, Metricas, Pilula, BarraEscada, LinhaAjuste, Nota } from '../../src/components/Pecas';
+import {
+  Sobre, Bloco, Metricas, Pilula, BarraEscada, LinhaAjuste, Nota, Assinatura,
+} from '../../src/components/Pecas';
 import { useTravelStats, useTripHistory } from '../../src/hooks/useTravelStats';
 import { useResumoProtecao } from '../../src/hooks/useResumoProtecao';
 import { bloqueioAtivo } from '../../src/services/bloqueio';
@@ -264,28 +266,10 @@ export default function PerfilScreen() {
           </Nota>
         </View>
 
-        {/* Assinatura da empresa, no padrão discreto que a Meta usa no pé dos
-            ajustes: centralizada, pequena, em tinta apagada, sem link.
-
-            Sem link de propósito — um link no rodapé cria a expectativa de um
-            site pronto do outro lado, e rodapé com link quebrado desgasta mais
-            confiança do que rodapé sem link nenhum.
-
-            Separada do bloco de notas acima por um respiro maior: ela não é
-            mais uma ressalva legal, é a marca de quem fez. Coladas, as três
-            linhas viram um parágrafo de letra miúda e nenhuma se lê. */}
-        <Text
-          style={{
-            ...typo.caption,
-            fontSize: 11,
-            color: c.textFaint,
-            textAlign: 'center',
-            marginTop: spacing.xl,
-            opacity: 0.8,
-          }}
-        >
-          Red Sun Tecnologia
-        </Text>
+        {/* A mesma assinatura das outras três abas, agora vinda da peça
+            compartilhada em vez de escrita à mão aqui. Duas cópias do mesmo
+            rodapé divergem na primeira vez que alguém ajusta uma delas. */}
+        <Assinatura />
       </ScrollView>
     </SafeAreaView>
   );

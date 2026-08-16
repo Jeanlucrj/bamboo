@@ -6,7 +6,7 @@ import { CHECKIN_PRESETS } from '@sentinela/shared';
 
 import { Identidade } from '../../src/components/Identidade';
 import { Icone } from '../../src/components/Icone';
-import { Sobre, Bloco, Degrau, Segmentado, Pilula, Nota } from '../../src/components/Pecas';
+import { Sobre, Bloco, Degrau, Segmentado, Pilula, Nota, Assinatura } from '../../src/components/Pecas';
 import { useSessionStore } from '../../src/stores/session';
 import { useResumoProtecao, listarContatos } from '../../src/hooks/useResumoProtecao';
 import { supabase } from '../../src/services/supabase';
@@ -309,6 +309,8 @@ export default function ViagemScreen() {
             abertura do app e check-in manual.
           </Nota>
         </View>
+
+        <Assinatura />
       </ScrollView>
     </SafeAreaView>
   );
