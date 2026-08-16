@@ -37,6 +37,19 @@ export default function MeusDados() {
   const [busca, setBusca] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  /**
+   * A lista de países só aparece quando há o que escolher.
+   *
+   * Antes ela ficava aberta permanentemente: 257 linhas com bandeira, uma
+   * atrás da outra, mesmo depois de o país já estar definido. A tela virava
+   * uma parede de bandeiras onde a informação que importa — qual país está
+   * valendo — se perdia no meio, e o botão "Salvar" ficava atrás de tudo isso.
+   *
+   * Agora ela abre em dois casos: quando ainda não há país escolhido, ou
+   * quando a pessoa toca em "Trocar". Escolher fecha de novo.
+   */
+  const [escolhendoPais, setEscolhendoPais] = useState(false);
+
   useEffect(() => {
     if (!perfil) return;
     setNome(perfil.full_name ?? '');
@@ -112,6 +125,32 @@ export default function MeusDados() {
   return (
     <Tela>
       <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
+        {/* O E-MAIL DO CADASTRO, que faltava.
+            É a identidade da conta: o link mágico chega nele, e é por ele que
+            a pessoa entra. Numa tela chamada "Meus dados" que mostrava nome,
+            telefone e país, o dado mais definidor dos quatro era o único
+            ausente — e quem usa só o app não tinha onde vê-lo.
+
+            Somente leitura. Trocar o e-mail troca a credencial de acesso e
+            exige reconfirmação por link nos dois endereços; oferecer o campo
+            aqui insinuaria que basta digitar por cima. */}
+        <Campo label="E-mail" hint="É por ele que você entra. Para trocar, fale com o suporte.">
+          <View
+            style={{
+              height: 52,
+              backgroundColor: c.surface,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing.md,
+              justifyContent: 'center',
+              opacity: 0.75,
+            }}
+          >
+            <Text style={{ ...typo.body, color: c.textMuted }} numberOfLines={1}>
+              {perfil?.email ?? '—'}
+            </Text>
+          </View>
+        </Campo>
+
         <Campo label="Nome completo">
           <TextInput
             style={input}
@@ -140,94 +179,120 @@ export default function MeusDados() {
         </Campo>
 
         <Rotulo>País de origem</Rotulo>
-        {paisEscolhido ? (
+
+        {/* ESCOLHIDO E FECHADO: uma linha com a bandeira e o nome, mais o botão
+            de trocar. É o estado normal da tela — a lista completa é a exceção,
+            não o padrão. */}
+        {paisEscolhido && !escolhendoPais ? (
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.sm,
-              backgroundColor: c.surfaceAlt,
+              backgroundColor: c.surface,
               borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: c.brandLight,
               paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
-              marginBottom: spacing.sm,
+              paddingVertical: 13,
             }}
           >
             <Text style={{ fontSize: 22 }}>{bandeiraEmoji(paisEscolhido.codigo)}</Text>
             <Text style={{ ...typo.body, color: c.text, fontWeight: '700', flex: 1 }}>
               {paisEscolhido.nome}
             </Text>
-            <Text style={{ ...typo.caption, color: c.textMuted }}>{paisEscolhido.codigo}</Text>
+            <Pressable
+              onPress={() => {
+                setEscolhendoPais(true);
+                setBusca('');
+              }}
+              hitSlop={10}
+            >
+              <Text style={{ ...typo.small, color: c.brandLight, fontWeight: '700' }}>Trocar</Text>
+            </Pressable>
           </View>
-        ) : null}
+        ) : (
+          <>
+            <TextInput
+              style={input}
+              value={busca}
+              onChangeText={setBusca}
+              placeholder="Buscar país…"
+              placeholderTextColor={c.textFaint}
+              autoCapitalize="none"
+              autoFocus={escolhendoPais}
+            />
 
-        <TextInput
-          style={input}
-          value={busca}
-          onChangeText={setBusca}
-          placeholder="Buscar país…"
-          placeholderTextColor={c.textFaint}
-          autoCapitalize="none"
-        />
-
-        {/* Altura fixa em vez de lista inteira: 257 países empurrariam o botão
-            de salvar para tão longe que ninguém chegaria nele. */}
-        <View
-          style={{
-            maxHeight: 260,
-            marginTop: spacing.sm,
-
-            borderRadius: radius.md,
-            overflow: 'hidden',
-          }}
-        >
-          <ScrollView nestedScrollEnabled>
-            {filtrados.map((p) => {
-              const ativo = p.codigo === pais;
-              return (
-                <Pressable
-                  key={p.codigo}
-                  onPress={() => {
-                    setPais(p.codigo);
-                    setBusca('');
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.sm,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: 11,
-                    backgroundColor: ativo ? c.surfaceAlt : 'transparent',
-                    borderBottomWidth: 1,
-                    borderBottomColor: c.border,
-                  }}
-                >
-                  <Text style={{ fontSize: 18 }}>{bandeiraEmoji(p.codigo)}</Text>
+            {/* Altura fixa em vez de lista inteira: 257 países empurrariam o
+                botão de salvar para tão longe que ninguém chegaria nele. */}
+            <View
+              style={{
+                maxHeight: 260,
+                marginTop: spacing.sm,
+                borderRadius: radius.md,
+                overflow: 'hidden',
+              }}
+            >
+              <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                {filtrados.map((p) => {
+                  const ativo = p.codigo === pais;
+                  return (
+                    <Pressable
+                      key={p.codigo}
+                      onPress={() => {
+                        setPais(p.codigo);
+                        setBusca('');
+                        // Escolher fecha a lista. Sem isto a tela voltava a ser
+                        // uma parede de bandeiras logo depois do toque.
+                        setEscolhendoPais(false);
+                      }}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: spacing.sm,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 11,
+                        backgroundColor: ativo ? c.surfaceAlt : 'transparent',
+                      }}
+                    >
+                      <Text style={{ fontSize: 18 }}>{bandeiraEmoji(p.codigo)}</Text>
+                      <Text
+                        style={{
+                          ...typo.small,
+                          color: ativo ? c.text : c.textMuted,
+                          fontWeight: ativo ? '700' : '500',
+                          flex: 1,
+                        }}
+                      >
+                        {p.nome}
+                      </Text>
+                      {ativo ? <Text style={{ color: c.brandLight }}>✓</Text> : null}
+                    </Pressable>
+                  );
+                })}
+                {filtrados.length === 0 ? (
                   <Text
-                    style={{
-                      ...typo.small,
-                      color: ativo ? c.text : c.textMuted,
-                      fontWeight: ativo ? '700' : '500',
-                      flex: 1,
-                    }}
+                    style={{ ...typo.small, color: c.textFaint, padding: spacing.md, textAlign: 'center' }}
                   >
-                    {p.nome}
+                    Nenhum país com esse nome.
                   </Text>
-                  {ativo ? <Text style={{ color: c.brandLight }}>✓</Text> : null}
-                </Pressable>
-              );
-            })}
-            {filtrados.length === 0 ? (
-              <Text
-                style={{ ...typo.small, color: c.textFaint, padding: spacing.md, textAlign: 'center' }}
+                ) : null}
+              </ScrollView>
+            </View>
+
+            {/* Só quando já havia um país: cancelar sem escolher precisa ter
+                saída, senão a única forma de fechar é escolher outro. */}
+            {paisEscolhido ? (
+              <Pressable
+                onPress={() => {
+                  setEscolhendoPais(false);
+                  setBusca('');
+                }}
+                style={{ paddingVertical: spacing.md, alignItems: 'center' }}
               >
-                Nenhum país com esse nome.
-              </Text>
+                <Text style={{ ...typo.small, color: c.textFaint }}>Cancelar</Text>
+              </Pressable>
             ) : null}
-          </ScrollView>
-        </View>
+          </>
+        )}
 
         <View style={{ height: spacing.lg }} />
         <Botao label="Salvar" onPress={salvar} ocupado={salvando} />
